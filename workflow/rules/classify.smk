@@ -107,14 +107,14 @@ if config["gtdb"]["use-local"]:
             db_folder=get_gtdb_folder(),
             clf_outdir=lambda wildcards, output: Path(output.json).parent,
             json=lambda wildcards, output: Path(output.json).name,
-        threads: 64
+        threads: 32
         log:
             "logs/{project}/gtdbtk/{sample}_classify.log",
         conda:
             "../envs/gtdbtk.yaml"
         shell:
             "(gtdbtk classify_wf --prefix {wildcards.sample} -x fa.gz "
-            "--mash_db {params.db_folder}mash_db/ --cpus 40 "
+            "--mash_db {params.db_folder}mash_db/ --cpus {threads} --pplacer_cpus 30 "
             "--genome_dir {input.bins}/ --out_dir {output.outdir}/ && "
             "cp {output.outdir}/{params.json} {params.clf_outdir}/) > {log} 2>&1"
 

@@ -4,7 +4,7 @@ pepfile: config/pep/config.yaml
 ## All results can be found under results/project-name/
 project-name: "test"
 #
-run-date: "2025-06-26"
+run-date: "2026-02-03"
 
 data-handling:
   # path to store data within the workflow
@@ -64,10 +64,10 @@ gtdb:
   use-local: True
   # if use-local is set to True, please specify the folder where the decompressed database is stored
   # this path is expected to lay under the data-handling resources folder
-  db-folder: gtdb/release226/
+  db-folder: gtdb/release220/
 
 card:
-  version: v4.0.0
+  version: v4.0.1
   dbfile: card.json
   url: https://card.mcmaster.ca/latest/data
 

@@ -145,3 +145,20 @@ rule cleanup_megahit_output:
         touch("results/{project}/megahit/{sample}_cleanup.done"),
     log:
         "logs/{project}/assembly/{sample}_cleanup.log",
+
+
+rule protein_identification:
+    input:
+        contigs=get_assembly,
+    output:
+        faa="results/{project}/output/proteins/{sample}/{sample}_proteins.faa",
+        fna="results/{project}/output/proteins/{sample}/{sample}_nucleotides.fna",
+        gff="results/{project}/output/proteins/{sample}/{sample}_annotations.gff",
+    log:
+        "logs/{project}/prodigal/{sample}_prodigal_run.log",
+    threads: 32
+    conda:
+        "../envs/pprodigal.yaml"
+    shell:
+        "pprodigal -i {input.contigs} -o {output.gff} -a {output.faa} "
+        "-d {output.fna} -p meta --tasks {threads} > {log} 2>&1"
