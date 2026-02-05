@@ -79,13 +79,13 @@ rule gzip_assembly:
         contigs=get_assembly,
     output:
         "results/{project}/output/fastas/{sample}/{sample}.fa.gz",
-    threads: 64
+    threads: 20
     log:
         "logs/{project}/assembly/{sample}_gzip.log",
     conda:
         "../envs/unix.yaml"
     shell:
-        "pigz -c {input.contigs} > {output} 2> {log}"
+        "gzip -c {input.contigs} > {output} 2> {log}"
 
 
 rule assembly_summary:
@@ -155,10 +155,28 @@ rule protein_identification:
         fna="results/{project}/output/proteins/{sample}/{sample}_nucleotides.fna",
         gff="results/{project}/output/proteins/{sample}/{sample}_annotations.gff",
     log:
-        "logs/{project}/prodigal/{sample}_prodigal_run.log",
+        "logs/{project}/proteins/{sample}.log",
     threads: 32
     conda:
         "../envs/pprodigal.yaml"
     shell:
         "pprodigal -i {input.contigs} -o {output.gff} -a {output.faa} "
         "-d {output.fna} -p meta --tasks {threads} > {log} 2>&1"
+
+
+rule gzip_proteins:
+    input:
+        faa=rules.protein_identification.output.faa,
+        fna=rules.protein_identification.output.fna,
+        gff=rules.protein_identification.output.gff,
+    output:
+        faa="results/{project}/output/proteins/{sample}/{sample}_proteins.faa.gz",
+        fna="results/{project}/output/proteins/{sample}/{sample}_nucleotides.fna.gz",
+        gff="results/{project}/output/proteins/{sample}/{sample}_annotations.gff.gz",
+    threads: 20
+    log:
+        "logs/{project}/proteins/{sample}_gzip.log",
+    conda:
+        "../envs/unix.yaml"
+    shell:
+        "gzip {input.faa} {input.fna} {input.gff} > {log} 2>&1"

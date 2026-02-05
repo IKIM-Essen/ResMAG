@@ -59,7 +59,7 @@ rule all:
         ),
         #proteins
         expand(
-            "results/{project}/output/proteins/{sample}/{sample}_proteins.faa",
+            "results/{project}/output/proteins/{sample}/{sample}_proteins.faa.gz",
             project=get_project(),
             sample=get_samples(),
         ),
