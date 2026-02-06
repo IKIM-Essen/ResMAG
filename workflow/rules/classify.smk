@@ -104,7 +104,6 @@ if config["gtdb"]["use-local"]:
                 )
             ),
         params:
-            db_folder=get_gtdb_folder(),
             clf_outdir=lambda wildcards, output: Path(output.json).parent,
             json=lambda wildcards, output: Path(output.json).name,
         threads: 32
@@ -114,7 +113,7 @@ if config["gtdb"]["use-local"]:
             "../envs/gtdbtk.yaml"
         shell:
             "(gtdbtk classify_wf --prefix {wildcards.sample} -x fa.gz "
-            "--mash_db {params.db_folder}mash_db/ --cpus {threads} --pplacer_cpus 30 "
+            "--cpus {threads} --pplacer_cpus 30 "
             "--genome_dir {input.bins}/ --out_dir {output.outdir}/ && "
             "cp {output.outdir}/{params.json} {params.clf_outdir}/) > {log} 2>&1"
 
@@ -152,7 +151,8 @@ else:
             "../envs/gtdbtk.yaml"
         shell:
             "(gtdbtk classify_wf --prefix {wildcards.sample} -x fa.gz "
-            "--cpus {threads} --genome_dir {input.bins}/ --out_dir {output.outdir}/ && "
+            "--cpus {threads} --pplacer_cpus 30 "
+            "--genome_dir {input.bins}/ --out_dir {output.outdir}/ && "
             "cp {output.outdir}/{params.json} {params.clf_outdir}/) > {log} 2>&1"
 
 

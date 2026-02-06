@@ -3,4 +3,4 @@ channels:
   - bioconda
   - nodefaults
 dependencies:
-  - coverm = 0.6.1
+  - coverm = 0.7.0

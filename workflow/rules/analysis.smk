@@ -1,3 +1,39 @@
+#gene identification
+rule gene_identification:
+    input:
+        contigs=get_assembly,
+    output:
+        faa="results/{project}/output/proteins/{sample}/{sample}_proteins.faa",
+        fna="results/{project}/output/proteins/{sample}/{sample}_nucleotides.fna",
+        gff="results/{project}/output/proteins/{sample}/{sample}_annotations.gff",
+    log:
+        "logs/{project}/proteins/{sample}.log",
+    threads: 32
+    conda:
+        "../envs/pprodigal.yaml"
+    shell:
+        "pprodigal -i {input.contigs} -o {output.gff} -a {output.faa} "
+        "-d {output.fna} -p meta --tasks {threads} > {log} 2>&1"
+
+
+rule gzip_proteins:
+    input:
+        faa=rules.gene_identification.output.faa,
+        fna=rules.gene_identification.output.fna,
+        gff=rules.gene_identification.output.gff,
+    output:
+        faa="results/{project}/output/proteins/{sample}/{sample}_proteins.faa.gz",
+        fna="results/{project}/output/proteins/{sample}/{sample}_nucleotides.fna.gz",
+        gff="results/{project}/output/proteins/{sample}/{sample}_annotations.gff.gz",
+    threads: 20
+    log:
+        "logs/{project}/proteins/{sample}_gzip.log",
+    conda:
+        "../envs/unix.yaml"
+    shell:
+        "gzip {input.faa} {input.fna} {input.gff} > {log} 2>&1"
+
+
 # Plasmid analysis
 rule load_genomad_DB:
     output:
@@ -50,11 +86,11 @@ rule move_genomad_output:
         sum_folder=lambda wildcards, input: Path(input.plasmid_tsv).parent,
     log:
         "logs/{project}/plasmids/{sample}_move_output.log",
-    threads: 64
+    threads: 32
     conda:
         "../envs/unix.yaml"
     shell:
-        "scp {params.sum_folder}/* {params.outdir}/ > {log} 2>&1"
+        "scp {params.sum_folder}/*.tsv {params.sum_folder}/*.json {params.outdir}/ > {log} 2>&1"
 
 
 # Resistance analysis
@@ -115,9 +151,9 @@ rule CARD_read_run:
         fa=get_filtered_gz_fastqs,
         db=rules.CARD_annotation.output,
     output:
-        txt="results/{project}/output/ARGs/reads/{sample}/{sample}.gene_mapping_data.txt",
+        txt="results/{project}/output/resistance/CARD/reads/{sample}/{sample}.gene_mapping_data.txt",
         bam=temp(
-            "results/{project}/output/ARGs/reads/{sample}/{sample}.sorted.length_100.bam"
+            "results/{project}/output/resistance/CARD/reads/{sample}/{sample}.sorted.length_100.bam"
         ),
     params:
         folder=lambda wildcards, output: Path(output.txt).parent,
@@ -136,7 +172,7 @@ rule CARD_read_sample_summary:
     input:
         txt=rules.CARD_read_run.output.txt,
     output:
-        csv="results/{project}/output/ARGs/reads/{sample}/{sample}_read_ARGs.csv",
+        csv="results/{project}/output/resistance/CARD/reads/{sample}/{sample}_read_ARGs.csv",
     params:
         case="reads",
     log:
@@ -154,7 +190,7 @@ rule CARD_load_DB:
     input:
         db=get_card_db_file(),
         read_args=expand(
-            "results/{project}/output/ARGs/reads/{sample}/{sample}.gene_mapping_data.txt",
+            "results/{project}/output/resistance/CARD/reads/{sample}/{sample}.gene_mapping_data.txt",
             sample=get_samples(),
             project=get_project(),
         ),
@@ -171,11 +207,11 @@ rule CARD_load_DB:
 
 rule CARD_assembly_run:
     input:
-        fa=rules.gzip_assembly.output,
+        faa=rules.gzip_proteins.output.faa,
         db=rules.CARD_load_DB.output,
     output:
-        txt="results/{project}/output/ARGs/assembly/{sample}/{sample}.txt",
-        json="results/{project}/output/ARGs/assembly/{sample}/{sample}.json",
+        txt="results/{project}/output/resistance/CARD/assembly/{sample}/{sample}.txt",
+        json="results/{project}/output/resistance/CARD/assembly/{sample}/{sample}.json",
     params:
         path_wo_ext=lambda wildcards, output: Path(output.txt).with_suffix(""),
     log:
@@ -184,8 +220,8 @@ rule CARD_assembly_run:
     conda:
         "../envs/card.yaml"
     shell:
-        "rgi main -i {input.fa} -o {params.path_wo_ext} "
-        "-t contig -a DIAMOND --low_quality --local "
+        "rgi main -i {input.faa} -o {params.path_wo_ext} "
+        "-t protein -a DIAMOND --local "
         "-n {threads} --clean > {log} 2>&1"
 
 
@@ -194,7 +230,7 @@ use rule CARD_read_sample_summary as CARD_assembly_sample_summary with:
         txt=rules.CARD_assembly_run.output.txt,
         json=rules.CARD_assembly_run.output.json,
     output:
-        csv="results/{project}/output/ARGs/assembly/{sample}/{sample}_assembly_ARGs.csv",
+        csv="results/{project}/output/resistance/CARD/assembly/{sample}/{sample}_assembly_ARGs.csv",
     params:
         case="assembly",
     log:
@@ -206,7 +242,7 @@ use rule CARD_assembly_run as CARD_mag_run with:
         fa="results/{project}/output/fastas/{sample}/mags/{binID}.fa.gz",
         db=rules.CARD_load_DB.output,
     output:
-        txt="results/{project}/output/ARGs/mags/{sample}/{binID}.txt",
+        txt="results/{project}/output/resistance/CARD/mags/{sample}/{binID}.txt",
     params:
         path_wo_ext=lambda wildcards, output: Path(output.txt).with_suffix(""),
     log:

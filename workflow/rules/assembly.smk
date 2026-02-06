@@ -145,38 +145,3 @@ rule cleanup_megahit_output:
         touch("results/{project}/megahit/{sample}_cleanup.done"),
     log:
         "logs/{project}/assembly/{sample}_cleanup.log",
-
-
-rule protein_identification:
-    input:
-        contigs=get_assembly,
-    output:
-        faa="results/{project}/output/proteins/{sample}/{sample}_proteins.faa",
-        fna="results/{project}/output/proteins/{sample}/{sample}_nucleotides.fna",
-        gff="results/{project}/output/proteins/{sample}/{sample}_annotations.gff",
-    log:
-        "logs/{project}/proteins/{sample}.log",
-    threads: 32
-    conda:
-        "../envs/pprodigal.yaml"
-    shell:
-        "pprodigal -i {input.contigs} -o {output.gff} -a {output.faa} "
-        "-d {output.fna} -p meta --tasks {threads} > {log} 2>&1"
-
-
-rule gzip_proteins:
-    input:
-        faa=rules.protein_identification.output.faa,
-        fna=rules.protein_identification.output.fna,
-        gff=rules.protein_identification.output.gff,
-    output:
-        faa="results/{project}/output/proteins/{sample}/{sample}_proteins.faa.gz",
-        fna="results/{project}/output/proteins/{sample}/{sample}_nucleotides.fna.gz",
-        gff="results/{project}/output/proteins/{sample}/{sample}_annotations.gff.gz",
-    threads: 20
-    log:
-        "logs/{project}/proteins/{sample}_gzip.log",
-    conda:
-        "../envs/unix.yaml"
-    shell:
-        "gzip {input.faa} {input.fna} {input.gff} > {log} 2>&1"

@@ -91,15 +91,15 @@ def get_checkm2_db():
 
 def get_filtered_fastqs(wildcards):
     return [
-        "results/{project}/filtered/fastqs/{sample}_R1.fastq",
-        "results/{project}/filtered/fastqs/{sample}_R2.fastq",
+        "results/{project}/filtered/{sample}_R1.fastq",
+        "results/{project}/filtered/{sample}_R2.fastq",
     ]
 
 
 def get_filtered_gz_fastqs(wildcards):
     return [
-        "results/{project}/filtered/fastqs/{sample}_R1.fastq.gz",
-        "results/{project}/filtered/fastqs/{sample}_R2.fastq.gz",
+        "results/{project}/filtered/{sample}_R1.fastq.gz",
+        "results/{project}/filtered/{sample}_R2.fastq.gz",
     ]
 
 

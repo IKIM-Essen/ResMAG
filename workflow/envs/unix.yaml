@@ -6,4 +6,4 @@ dependencies:
   - git
   - sed
   - curl
-  - pigz
+  - gzip

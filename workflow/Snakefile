@@ -20,7 +20,6 @@ report: "report/workflow.rst"
 include: "rules/common.smk"
 include: "rules/qc.smk"
 include: "rules/host_filtering.smk"
-include: "rules/trimming.smk"
 include: "rules/assembly.smk"
 include: "rules/metabat.smk"
 include: "rules/metacoag.smk"
@@ -57,12 +56,6 @@ rule all:
             project=get_project(),
             sample=get_samples(),
         ),
-        #proteins
-        expand(
-            "results/{project}/output/proteins/{sample}/{sample}_proteins.faa.gz",
-            project=get_project(),
-            sample=get_samples(),
-        ),
         # plasmid analysis
         expand(
             "results/{project}/output/plasmids/{sample}/{sample}_plasmid_summary.tsv",
@@ -96,12 +89,12 @@ rule all:
         ),
         # resistance analysis
         expand(
-            "results/{project}/output/ARGs/reads/{sample}/{sample}_read_ARGs.csv",
+            "results/{project}/output/resistance/CARD/reads/{sample}/{sample}_read_ARGs.csv",
             project=get_project(),
             sample=get_samples(),
         ),
         expand(
-            "results/{project}/output/ARGs/assembly/{sample}/{sample}_assembly_ARGs.csv",
+            "results/{project}/output/resistance/CARD/assembly/{sample}/{sample}_assembly_ARGs.csv",
             project=get_project(),
             sample=get_samples(),
         ),
@@ -109,7 +102,7 @@ rule all:
 
 """        
         expand(
-            "results/{project}/output/ARGs/mags/{sample}/all_mags.done",
+            "results/{project}/output/resistance/CARD/mags/{sample}/all_mags.done",
             project=get_project(),
             sample=get_samples(),
         ),

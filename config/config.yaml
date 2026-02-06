@@ -64,7 +64,7 @@ gtdb:
   use-local: True
   # if use-local is set to True, please specify the folder where the decompressed database is stored
   # this path is expected to lay under the data-handling resources folder
-  db-folder: gtdb/release220/
+  db-folder: gtdb/release226/
 
 card:
   version: v4.0.1

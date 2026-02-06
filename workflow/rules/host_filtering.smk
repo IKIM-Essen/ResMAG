@@ -79,7 +79,7 @@ rule filter_human:
     output:
         filtered=temp(
             expand(
-                "results/{{project}}/filtered/fastqs/{{sample}}_{read}.fastq",
+                "results/{{project}}/filtered/{{sample}}_{read}.fastq",
                 read=["R1", "R2"],
             )
         ),
@@ -97,16 +97,16 @@ rule filter_human:
 
 rule gzip_filtered_reads:
     input:
-        "results/{project}/filtered/fastqs/{sample}_{read}.fastq",
+        "results/{project}/filtered/{sample}_{read}.fastq",
     output:
-        "results/{project}/filtered/fastqs/{sample}_{read}.fastq.gz",
+        "results/{project}/filtered/{sample}_{read}.fastq.gz",
     log:
         "logs/{project}/human_filtering/gzip_{sample}_{read}.log",
-    threads: 64
+    threads: 20
     conda:
         "../envs/unix.yaml"
     shell:
-        "pigz -k {input} > {log} 2>&1"
+        "gzip -k {input} > {log} 2>&1"
 
 
 if config["host-filtering"]["do-host-filtering"]:
@@ -152,9 +152,9 @@ if config["host-filtering"]["do-host-filtering"]:
             "../envs/minimap2.yaml"
         shell:
             "(samtools fastq -F 3584 -f 77 {input.bam} | "
-            "pigz -c > {output.filtered[0]} && "
+            "gzip -c > {output.filtered[0]} && "
             "samtools fastq -F 3584 -f 141 {input.bam} | "
-            "pigz -c > {output.filtered[1]}) > {log} 2>&1"
+            "gzip -c > {output.filtered[1]}) > {log} 2>&1"
 
 
 ## TODO
