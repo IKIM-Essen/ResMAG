@@ -6,31 +6,25 @@ sys.stderr = open(snakemake.log[0], "w")
 ## input files
 in_dastool = (
     snakemake.input.tool
-)  # "ResMAG/results/autobrewer/das_tool/ABS_24_07/ABS_24_07_DASTool_summary.tsv"
+)
 in_checkm = (
     snakemake.input.checkm
-)  # "ResMAG/results/autobrewer/qc/checkm2/ABS_24_07/quality_report.tsv"
+)
 in_gtdb = (
     snakemake.input.gtdb
-)  # "ResMAG/results/autobrewer/classification/ABS_24_07/ABS_24_07.bac120.summary.tsv"
+)
 
 ## output files
 ### csv
 csv_path_mags = (
     snakemake.output.csv_mags
-)  # "ResMAG/results/autobrewer/report/ABS_24_07/mags_summary.csv" #
+)
 csv_path_bins = (
     snakemake.output.csv_bins
-)  # "ResMAG/results/autobrewer/report/ABS_24_07/bin_summary.csv"
+)
 csv_path_tax = (
     snakemake.output.csv_tax
-)  # "ResMAG/results/autobrewer/report/ABS_24_07/bin_taxonomy.csv"
-csv_path_checkm = (
-    snakemake.output.csv_checkm
-)  # "ResMAG/results/autobrewer/report/ABS_24_07/checkm_summary.csv"
-csv_path_dastool = (
-    snakemake.output.csv_dastool
-)  # "ResMAG/results/autobrewer/report/ABS_24_07/DASTool_summary.csv"
+)  
 
 ## params
 max_cont = snakemake.params.max_cont
@@ -46,7 +40,7 @@ def save_csv_table(csv_path, summary_df):
 
 tool_df = pd.read_table(in_dastool)
 tool_df.drop(["bin_set"], axis=1, inplace=True)
-# tool_df.rename({"bin":"bin"},axis=1,inplace=True)
+
 tool_df.set_index("bin", inplace=True)
 col_order = [
     "bin_score",
@@ -63,9 +57,6 @@ tool_df = tool_df[col_order]
 
 del col_order[:2]
 tool_red_df = tool_df.drop(col_order, axis=1)
-
-save_csv_table(csv_path_dastool, tool_red_df)
-
 
 checkm_df = pd.read_table(in_checkm)
 rm_list = ["Translation_Table_Used", "Additional_Notes"]
@@ -93,8 +84,6 @@ checkm_df = checkm_df[col_order]
 
 del col_order[:5]
 checkm_red_df = checkm_df.drop(col_order, axis=1)
-save_csv_table(csv_path_checkm, checkm_red_df)
-
 
 gtdb_df = pd.read_table(in_gtdb)
 gtdb_df.rename({"user_genome": "bin"}, axis=1, inplace=True)

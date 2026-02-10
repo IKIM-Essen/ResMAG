@@ -79,13 +79,13 @@ rule filter_human:
     output:
         filtered=temp(
             expand(
-                "results/{{project}}/filtered/{{sample}}_{read}.fastq",
+                "results/{{project}}/output/filtered_reads/{{sample}}_{read}.fastq",
                 read=["R1", "R2"],
             )
         ),
     threads: 64
     log:
-        "results/{project}/report_prerequisites/qc/filter_human_{sample}.log",
+        "results/{project}/output/report/prerequisites/qc/{sample}_filter_human.log",
     conda:
         "../envs/minimap2.yaml"
     shell:
@@ -97,9 +97,9 @@ rule filter_human:
 
 rule gzip_filtered_reads:
     input:
-        "results/{project}/filtered/{sample}_{read}.fastq",
+        "results/{project}/output/filtered_reads/{sample}_{read}.fastq",
     output:
-        "results/{project}/filtered/{sample}_{read}.fastq.gz",
+        "results/{project}/output/filtered_reads/{sample}_{read}.fastq.gz",
     log:
         "logs/{project}/human_filtering/gzip_{sample}_{read}.log",
     threads: 20
@@ -147,7 +147,7 @@ if config["host-filtering"]["do-host-filtering"]:
             ),
         threads: 64
         log:
-            "results/{project}/report_prerequisites/qc/filter_host_{sample}.log",
+            "results/{project}/output/report/prerequisites/qc/{sample}_filter_host.log",
         conda:
             "../envs/minimap2.yaml"
         shell:
@@ -167,11 +167,11 @@ if config["host-filtering"]["do-host-filtering"]:
             sample=get_samples(),
         ),
         jsons=expand(
-            "results/{{project}}/report_prerequisites/qc/{sample}.fastp.json",
+            "results/{{project}}/output/report/prerequisites/qc/{sample}.fastp.json",
             sample=get_samples(),
         ),
         human_logs=expand(
-            "results/{{project}}/report_prerequisites/qc/filter_human_{sample}.log",
+            "results/{{project}}/output/report/prerequisites/qc/filter_human_{sample}.log",
             sample=get_samples(),
         ),
         host_logs=get_host_map_statistics,

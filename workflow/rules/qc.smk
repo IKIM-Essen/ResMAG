@@ -12,7 +12,7 @@ rule fastp:
             ]
         ),
         html=temp("results/{project}/trimmed/fastp/{sample}.html"),
-        json="results/{project}/report_prerequisites/qc/{sample}.fastp.json",
+        json="results/{project}/output/report/prerequisites/qc/{sample}.fastp.json",
     params:
         adapters=get_adapters,
         extra="--qualified_quality_phred {phred} --length_required {minlen}".format(
@@ -78,25 +78,22 @@ rule multiqc:
         expand(
             [
                 "results/{{project}}/trimmed/fastp/{sample}.{read}_fastqc.zip",
-                "results/{{project}}/report_prerequisites/qc/{sample}.fastp.json",
+                "results/{{project}}/output/report/prerequisites/qc/{sample}.fastp.json",
             ],
             sample=get_samples(),
             read=["1", "2"],
         ),
+        config="config/multiqc_config.yaml",
     output:
         report(
-            "results/{project}/output/report/all/multiqc.html",
-            htmlindex="multiqc.html",
+            "results/{project}/output/report/all/multiqc_{project}.html",
+            htmlindex="multiqc_{project}.html",
             category="1. Quality control",
             labels={"sample": "all samples"},
         ),
-        "results/{project}/output/report/all/multiqc_data.zip",
+        "results/{project}/output/report/all/multiqc_{project}.zip",
     params:
-        extra=(
-            "--zip-data-dir "
-            "--config config/multiqc_config.yaml "
-            "--title 'Results for data from {project} project'"
-        ),
+        extra=("--title 'Results for data from {project} project'"),
         use_input_files_only=True,
     log:
         "logs/{project}/multiqc.log",
@@ -108,11 +105,11 @@ rule qc_summary:
     input:
         # move these to report_prerequistes
         jsons=expand(
-            "results/{{project}}/report_prerequisites/qc/{sample}.fastp.json",
+            "results/{{project}}/output/report/prerequisites/qc/{sample}.fastp.json",
             sample=get_samples(),
         ),
         human_logs=expand(
-            "results/{{project}}/report_prerequisites/qc/filter_human_{sample}.log",
+            "results/{{project}}/output/report/prerequisites/qc/{sample}_filter_human.log",
             sample=get_samples(),
         ),
         host_logs=get_host_map_statistics,
@@ -134,13 +131,15 @@ rule qc_summary_report:
     input:
         rules.qc_summary.output.vis_csv,
     output:
-        report(
-            directory("results/{project}/output/report/all/quality_summary/"),
-            htmlindex="index.html",
-            category="1. Quality control",
-            labels={
-                "sample": "all samples",
-            },
+        temp(
+            report(
+                directory("results/{project}/output/report/all/quality_summary/"),
+                htmlindex="index.html",
+                category="1. Quality control",
+                labels={
+                    "sample": "all samples",
+                },
+            )
         ),
     params:
         pin_until="sample",

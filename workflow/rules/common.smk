@@ -60,7 +60,7 @@ def get_prefiltered_fastqs(wildcards):
 def get_host_map_statistics(wildcards):
     if config["host-filtering"]["do-host-filtering"]:
         logs = expand(
-            "results/{{project}}/report_prerequisites/qc/filter_host_{sample}.log",
+            "results/{{project}}/output/report/prerequisites/qc/filter_host_{sample}.log",
             sample=get_samples(),
         )
         return logs
@@ -91,15 +91,15 @@ def get_checkm2_db():
 
 def get_filtered_fastqs(wildcards):
     return [
-        "results/{project}/filtered/{sample}_R1.fastq",
-        "results/{project}/filtered/{sample}_R2.fastq",
+        "results/{project}/output/filtered_reads/{sample}_R1.fastq",
+        "results/{project}/output/filtered_reads/{sample}_R2.fastq",
     ]
 
 
 def get_filtered_gz_fastqs(wildcards):
     return [
-        "results/{project}/filtered/{sample}_R1.fastq.gz",
-        "results/{project}/filtered/{sample}_R2.fastq.gz",
+        "results/{project}/output/filtered_reads/{sample}_R1.fastq.gz",
+        "results/{project}/output/filtered_reads/{sample}_R2.fastq.gz",
     ]
 
 

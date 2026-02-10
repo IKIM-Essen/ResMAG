@@ -7,7 +7,7 @@ rule snakemake_report:
     input:
         # 1. Quality control
         report_input,
-        "results/{project}/output/report/all/multiqc.html",
+        "results/{project}/output/report/all/multiqc_{project}.html",
         # 2. Species diversity
         "results/{project}/output/report/all/quality_summary/",
         # 3. Assembly results
@@ -16,14 +16,6 @@ rule snakemake_report:
         "results/{project}/output/report/all/binning/",
         expand(
             "results/{{project}}/output/report/{sample}/bin/",
-            sample=get_samples(),
-        ),
-        expand(
-            "results/{{project}}/output/report/{sample}/checkm2/",
-            sample=get_samples(),
-        ),
-        expand(
-            "results/{{project}}/output/report/{sample}/dastool/",
             sample=get_samples(),
         ),
         expand(

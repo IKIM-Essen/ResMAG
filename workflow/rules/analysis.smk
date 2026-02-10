@@ -1,4 +1,4 @@
-#gene identification
+# gene identification
 rule gene_identification:
     input:
         contigs=get_assembly,
@@ -154,6 +154,9 @@ rule CARD_read_run:
         txt="results/{project}/output/resistance/CARD/reads/{sample}/{sample}.gene_mapping_data.txt",
         bam=temp(
             "results/{project}/output/resistance/CARD/reads/{sample}/{sample}.sorted.length_100.bam"
+        ),
+        bai=temp(
+            "results/{project}/output/resistance/CARD/reads/{sample}/{sample}.sorted.length_100.bam.bai"
         ),
     params:
         folder=lambda wildcards, output: Path(output.txt).parent,

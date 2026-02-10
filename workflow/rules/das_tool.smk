@@ -113,13 +113,13 @@ if bins_for_sample:
         output:
             bins=directory("results/{project}/output/fastas/{sample}/bins/"),
             done=touch("results/{project}/binning/das_tool/{sample}_bins.done"),
-        threads: 64
+        threads: 15
         log:
             "logs/{project}/bins/{sample}/gz_bins.log",
         conda:
             "../envs/unix.yaml"
         shell:
-            "(pigz -k {input.bins}/*.fa && "
+            "(gzip -k {input.bins}/*.fa && "
             "mkdir -p {output.bins}/ && "
             "mv {input.bins}/*.fa.gz {output.bins}/ ) > {log} 2>&1"
 
