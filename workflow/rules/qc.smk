@@ -3,7 +3,7 @@
 # version in this wrapper: fastp=1.0.1
 rule fastp:
     input:
-        sample=get_local_fastqs,
+        sample=get_fastqs,
     output:
         trimmed=temp(
             [
@@ -51,12 +51,6 @@ rule fastqc:
         zip=temp(
             expand(
                 "results/{{project}}/trimmed/fastp/{{sample}}.{read}_fastqc.zip",
-                read=["1", "2"],
-            )
-        ),
-        html=temp(
-            expand(
-                "results/{{project}}/trimmed/fastp/{{sample}}.{read}_fastqc.html",
                 read=["1", "2"],
             )
         ),

@@ -3,12 +3,8 @@ pepfile: config/pep/config.yaml
 ## Please change to a name describing your project
 ## All results can be found under results/project-name/
 project-name: "test"
-#
-run-date: "2026-02-03"
 
 data-handling:
-  # path to store data within the workflow
-  data: data/
   # path where databases and reference genomes are stored
   resources: resources/
 
@@ -41,11 +37,6 @@ host-filtering:
 
 # minimum contig length used during assembly step
 min-contig-length: 300
-
-das-tool:
-  # cores to use for das_tool
-  threads: 64
-  binner-list: ["metabat", "metacoag"]
 
 MAG-criteria:
   min-completeness: 50.00

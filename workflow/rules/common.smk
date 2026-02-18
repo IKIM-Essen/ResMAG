@@ -4,10 +4,6 @@ import os
 configfile: "config/config.yaml"
 
 
-def get_data_path():
-    return config["data-handling"]["data"]
-
-
 def get_resource_path():
     return config["data-handling"]["resources"]
 
@@ -20,6 +16,7 @@ def get_samples():
     return list(pep.sample_table["sample_name"].values)
 
 
+"""
 def get_fastqs(wildcards):
     file_r1 = pep.sample_table.loc[wildcards.sample]["fq1"]
     folder = str(Path(file_r1).parent)
@@ -27,12 +24,15 @@ def get_fastqs(wildcards):
     filename_r2 = Path(pep.sample_table.loc[wildcards.sample]["fq2"]).name
     return [folder, filename_r1, filename_r2]
 
+"""
 
-def get_local_fastqs(wildcards):
-    path = get_data_path()
+
+def get_fastqs(wildcards):
+    file_r1 = pep.sample_table.loc[wildcards.sample]["fq1"]
+    file_r2 = pep.sample_table.loc[wildcards.sample]["fq2"]
     return (
-        "{data}{{project}}/{{sample}}_R1.fastq.gz".format(data=path),
-        "{data}{{project}}/{{sample}}_R2.fastq.gz".format(data=path),
+        file_r1,
+        file_r2,
     )
 
 
@@ -125,39 +125,10 @@ def get_contig_length_threshold():
     return config["min-contig-length"]
 
 
-def get_binners():
-    return config["das-tool"]["binner-list"]
-
-
-def get_all_contig2bin_files(wildcards):
-    binners = get_binners()
-    file_list = [
-        "".join(
-            [
-                "results/{project}/output/contig2bins/{sample}/",
-                binner,
-                "_contig2bin.tsv",
-            ]
-        )
-        for binner in binners
-    ]
-    return file_list
-
-
-## reads in binner control file and returns list with paths to contig2bin files
-## and a list with name of the binners that produced results
-def get_paths_binner(wildcards):
-    file = "results/{}/binning/das_tool/binner_control_{}.csv".format(
-        wildcards.project, wildcards.sample
-    )
-    lines = open(file).readlines()
-    paths = str(lines[0].rstrip("\n"))
-    binner = str(lines[1].rstrip("\n"))
-    return paths, binner
-
-
 def bins_for_sample(wildcards):
-    if len(get_paths_binner[0]) > 0:
+    binfolder = "results/{project}/binning/das_tool/{sample}/{sample}_DASTool_bins/"
+    bin_list = [b for b in os.listdir(binfolder) if b.endswith(".fa")]
+    if len(bin_list) > 0:
         return True
     else:
         return False
@@ -201,8 +172,13 @@ def get_gtdb_folder():
     return path
 
 
+def get_genomad_DB_folder():
+    path = "".join([get_resource_path(), "genomad_db/"])
+    return path
+
+
 def get_genomad_DB_file():
-    path = "".join([get_resource_path(), "genomad_db/names.dmp"])
+    path = "".join([get_genomad_DB_folder(), "names.dmp"])
     return path
 
 

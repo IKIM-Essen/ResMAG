@@ -8,7 +8,6 @@ rule megahit:
         contigs=temp("results/{project}/megahit/{sample}/final.contigs.fa"),
         outdir=temp(directory("results/{project}/megahit/{sample}/")),
         log="results/{project}/output/report/prerequisites/assembly/{sample}_megahit.log",
-        done=touch("results/{project}/megahit/{sample}.done"),
     params:
         threshold=get_contig_length_threshold(),
     threads: 64
@@ -142,6 +141,7 @@ use rule qc_summary_report as assembly_report with:
         "logs/{project}/report/assembly_rbt_csv.log",
 
 
+"""
 # remove megahit intermediate results when all dependent results are produced
 rule cleanup_megahit_output:
     input:
@@ -155,3 +155,4 @@ rule cleanup_megahit_output:
         touch("results/{project}/megahit/{sample}_cleanup.done"),
     log:
         "logs/{project}/assembly/{sample}_cleanup.log",
+"""

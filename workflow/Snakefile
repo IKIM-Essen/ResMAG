@@ -67,26 +67,6 @@ rule all:
             "results/{project}/output/report/report_{project}.zip",
             project=get_project(),
         ),
-        expand(
-            "results/{project}/megahit/{sample}_cleanup.done",
-            project=get_project(),
-            sample=get_samples(),
-        ),
-        expand(
-            "results/{project}/binning/metabat/{sample}_cleanup.done",
-            project=get_project(),
-            sample=get_samples(),
-        ),
-        expand(
-            "results/{project}/binning/metacoag/{sample}_cleanup.done",
-            project=get_project(),
-            sample=get_samples(),
-        ),
-        expand(
-            "results/{project}/binning/das_tool/{sample}_cleanup.done",
-            project=get_project(),
-            sample=get_samples(),
-        ),
         # resistance analysis
         expand(
             "results/{project}/output/resistance/CARD/reads/{sample}/{sample}_read_ARGs.csv",

@@ -37,23 +37,24 @@ rule gzip_proteins:
 # Plasmid analysis
 rule load_genomad_DB:
     output:
+        folder=get_genomad_DB_folder(),
         file=get_genomad_DB_file(),
     params:
-        folder=lambda wildcards, output: Path(output.file).parent.parent,
+        res_folder=lambda wildcards, output: Path(output.folder).parent,
     log:
         "logs/load_genomad_DB.log",
     conda:
         "../envs/genomad.yaml"
     shell:
-        "genomad download-database {params.folder}/ > {log} 2>&1"
+        "genomad download-database {params.res_folder}/ > {log} 2>&1"
 
 
 rule genomad_run:
     input:
-        db=rules.load_genomad_DB.output.file,
+        db=rules.load_genomad_DB.output.folder,
         asmbl=rules.gzip_assembly.output,
     output:
-        outdir=temp(directory("results/{project}/genomad/{sample}/")),
+        #outdir=temp(directory("results/{project}/genomad/{sample}/")),
         plasmid_tsv=temp(
             "results/{project}/genomad/{sample}/{sample}_summary/{sample}_plasmid_summary.tsv"
         ),
@@ -61,7 +62,7 @@ rule genomad_run:
             "results/{project}/genomad/{sample}/{sample}_summary/{sample}_virus_summary.tsv"
         ),
     params:
-        db_folder=lambda wildcards, input: Path(input.db).parent,
+        outdir=lambda wildcards, output: Path(output.plasmid_tsv).parent.parent,
     log:
         "logs/{project}/plasmids/{sample}_run.log",
     threads: 64
@@ -69,13 +70,12 @@ rule genomad_run:
         "../envs/genomad.yaml"
     shell:
         "genomad end-to-end --cleanup -t {threads} "
-        "{input.asmbl} {output.outdir}/ "
-        "{params.db_folder}/ > {log} 2>&1"
+        "{input.asmbl} {params.outdir}/ "
+        "{input.db}/ > {log} 2>&1"
 
 
 rule move_genomad_output:
     input:
-        folder=rules.genomad_run.output.outdir,
         plasmid_tsv=rules.genomad_run.output.plasmid_tsv,
         virus_tsv=rules.genomad_run.output.virus_tsv,
     output:
@@ -131,11 +131,11 @@ rule CARD_annotation:
         json=get_card_db_file(),
         load=rules.CARD_load_DB_for_reads.output,
     output:
-        temp(touch("results/CARD_annotation.done")),
+        done=temp(touch("results/CARD_annotation.done")),
+        ann=get_card_annotation_file(),
     params:
         folder=lambda wildcards, input: Path(input.json).parent,
         file=lambda wildcards, input: Path(input.json).name,
-        ann=get_card_annotation_file(),
     log:
         "logs/CARD_annotation.log",
     conda:
@@ -143,7 +143,7 @@ rule CARD_annotation:
     shell:
         "(cd {params.folder}/ && "
         "rgi card_annotation -i {params.file}) && "
-        "rgi load -i {input.json} --card_annotation {params.ann} --local > {log} 2>&1"
+        "rgi load -i {input.json} --card_annotation {output.ann} --local > {log} 2>&1"
 
 
 rule CARD_read_run:
@@ -152,12 +152,6 @@ rule CARD_read_run:
         db=rules.CARD_annotation.output,
     output:
         txt="results/{project}/output/resistance/CARD/reads/{sample}/{sample}.gene_mapping_data.txt",
-        bam=temp(
-            "results/{project}/output/resistance/CARD/reads/{sample}/{sample}.sorted.length_100.bam"
-        ),
-        bai=temp(
-            "results/{project}/output/resistance/CARD/reads/{sample}/{sample}.sorted.length_100.bam.bai"
-        ),
     params:
         folder=lambda wildcards, output: Path(output.txt).parent,
     log:

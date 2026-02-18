@@ -17,10 +17,9 @@ rule checkm2_run:
         bins="results/{project}/output/fastas/{sample}/bins/",
         dbfile=get_checkm2_db(),
     output:
-        outdir=temp(directory("results/{project}/qc/checkm2/{sample}/")),
         stats="results/{project}/output/report/{sample}/checkm2_quality_report.tsv",
     params:
-        outname="quality_report.tsv",
+        outdir="results/{project}/qc/checkm2/{sample}/",
     log:
         "logs/{project}/checkm2/{sample}.log",
     threads: 24
@@ -28,8 +27,8 @@ rule checkm2_run:
         "../envs/checkm2.yaml"
     shell:
         "(checkm2 predict -x fa.gz --threads {threads} --force "
-        "--input {input.bins}/ --output-directory {output.outdir}/ && "
-        "cp {output.outdir}/{params.outname} {output.stats}) > {log} 2>&1"
+        "--input {input.bins}/ --output-directory {params.outdir}/ && "
+        "cp {params.outdir}/quality_report.tsv {output.stats}) > {log} 2>&1"
 
 
 rule bin_summary_sample:
