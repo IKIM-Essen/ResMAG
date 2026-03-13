@@ -12,8 +12,6 @@ rule snakemake_report:
         "results/{project}/output/report/all/quality_summary/",
         # 3. Assembly results
         "results/{project}/output/report/all/assembly/",
-        # 4. Binning results
-        "results/{project}/output/report/all/binning/",
         expand(
             "results/{{project}}/output/report/{sample}/bin/",
             sample=get_samples(),
@@ -42,6 +40,5 @@ rule snakemake_report:
         "../envs/snakemake.yaml"
     shell:
         "snakemake --nolock --report {output} --report-stylesheet {params.style} "
-
         "> {log} 2>&1"
         #"{params.for_testing} "

@@ -4,10 +4,6 @@ pepfile: config/pep/config.yaml
 ## All results can be found under results/project-name/
 project-name: "test"
 
-data-handling:
-  # path where databases and reference genomes are stored
-  resources: resources/
-
 quality-criteria:
   # minimal length of acceptable reads
   min-length-reads: 30
@@ -20,9 +16,9 @@ adapter-seqs: "-a CTGTCTCTTATACACATCT -g AGATGTGTATAAGAGACAG"
 human-filtering:
   # if you have a human reference genome on your device,
   # you can set use-local to True and specify the path to the human reference genome
-  use-local: False
+  use-local: True
   # path to a locally stored human reference genome
-  local-path: /groups/ds/databases_refGenomes/refGenomes/latest/human/GCA_000001405.29_GRCh38.p14_genomic.fna.gz
+  local-path: /groups/ds/databases_refGenomes/refGenomes/latest/human/GRCh38_latest_genomic.fna.gz
   # if use-local = False the reference genome is downloaded via the following url
   download-path: https://ftp.ncbi.nlm.nih.gov/refseq/H_sapiens/annotation/GRCh38_latest/refseq_identifiers/GRCh38_latest_genomic.fna.gz
 
@@ -43,23 +39,30 @@ MAG-criteria:
   max-contamination: 30.00
 
 ### Handling of different databases
+## The GTDB has about 140 Gb
+# please specify the folder where the decompressed database is stored
+gtdb: /groups/ds/databases_refGenomes/databases/latest/gtdb/release226/
+
 kaiju:
-  download: https://kaiju-idx.s3.eu-central-1.amazonaws.com/2024/kaiju_db_refseq_nr_2024-08-13.tgz
-  fmi-file: kaiju_db/kaiju_db_refseq_nr.fmi
-
-checkm2: CheckM2_database/uniref100.KO.1.dmnd
-
-## The GTDB has about 100 Gb
-## if use-local is set to False this will be downloaded during the pipeline run
-gtdb:
   use-local: True
-  # if use-local is set to True, please specify the folder where the decompressed database is stored
-  # this path is expected to lay under the data-handling resources folder
-  db-folder: gtdb/release226/
+  # path of kaiju DB .fmi file
+  # if use-local False: DB is downloaded and saved to this path
+  fmi-file: /groups/ds/databases_refGenomes/databases/latest/kaiju/refseq_nr/unpacked_2024-08-13/kaiju_db_refseq_nr.fmi
+  download: https://kaiju-idx.s3.eu-central-1.amazonaws.com/2024/kaiju_db_refseq_nr_2024-08-13.tgz
+
+checkm2:
+  use-local: True
+  db-folder: /groups/ds/databases_refGenomes/databases/latest/checkM2/
+
+# folder of genomad DB
+genomad:
+  use-local: True
+  db-folder: /groups/ds/databases_refGenomes/databases/latest/genomad/
 
 card:
+  use-local: True
+  db-file: /groups/ds/databases_refGenomes/databases/latest/card/card.json
   version: v4.0.1
-  dbfile: card.json
   url: https://card.mcmaster.ca/latest/data
 
 ## string term used for formatting output tables

@@ -1,33 +1,13 @@
 from pathlib import Path
 
-
-if config["human-filtering"]["use-local"]:
-
-    rule copy_local_human_ref:
-        output:
-            fasta=get_human_ref(),
-        params:
-            local=get_human_local_folder(),
-            folder=lambda wildcards, output: Path(output.fasta).parent,
-            file=lambda wildcards, output: Path(output.fasta).name,
-        log:
-            "logs/human_ref_local_copy.log",
-        group:
-            "refGenome_depended"
-        conda:
-            "../envs/unix.yaml"
-        shell:
-            "(mkdir -p {params.folder} && "
-            "tar cpfz - -C {params.local} {params.file} | "
-            "(cd {params.folder} ; tar xpfz -)) > {log} 2>&1"
-
-else:
+# Download human reference genome if not local file is given
+if not config["human-filtering"]["use-local"]:
 
     rule download_human_ref:
         output:
             fasta=get_human_ref(),
         params:
-            download=config["human-filtering"]["download-path"],
+            download=get_human_ref_download(),
             folder=lambda wildcards, output: Path(output.fasta).parent,
         log:
             "logs/human_ref_download.log",
@@ -103,6 +83,7 @@ rule gzip_filtered_reads:
     log:
         "logs/{project}/human_filtering/gzip_{sample}_{read}.log",
     threads: 20
+    priority: 1
     conda:
         "../envs/unix.yaml"
     shell:
@@ -116,11 +97,9 @@ if config["host-filtering"]["do-host-filtering"]:
     use rule map_to_human as map_to_host with:
         input:
             fastqs=get_trimmed_fastqs,
-            ref=config["host-filtering"]["ref-genome"],
+            ref=get_host_ref(),
         output:
             bam=temp("results/{project}/host_filtering/alignments/{sample}.bam"),
-        params:
-            ref=config["host-filtering"]["ref-genome"],
         threads: 20
         log:
             "logs/{project}/host_filtering/map_to_host_{sample}.log",

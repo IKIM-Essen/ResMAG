@@ -1,6 +1,6 @@
 # ResMAG - name pending
 
-[![Snakemake](https://img.shields.io/badge/snakemake-≥6.3.0-brightgreen.svg)](https://snakemake.github.io)
+[![Snakemake](https://img.shields.io/badge/snakemake-≥9.0.0-brightgreen.svg)](https://snakemake.github.io)
 [![GitHub actions status](https://github.com/<owner>/<repo>/workflows/Tests/badge.svg?branch=main)](https://github.com/<owner>/<repo>/actions?query=branch%3Amain+workflow%3ATests)
 
 
@@ -88,24 +88,26 @@ git clone https://github.com/IKIM-Essen/metagenomics_res.git
 ```
 
 #### Download GTDB
-The GTDB needs to be downloaded and decompressed, it requires about 110 Gb.
-1. Change to the cloned workflow directory
-2. Create a new folder `resources/gtdb/` and change to this directory
-3. Download the latest version of GTDB
-   **or**
-   if you have already downloaded a version of GTDB move the `gtdbtk_data.tar.gz` file to `resources/gtdb/`
-4. Unarchive the downloaded file
-5. After successful step 4: the archive can be removed
+The GTDB needs to be downloaded and decompressed, it requires about 140 Gb.
 
-```
-wget https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/auxillary_files/gtdbtk_package/full_package/gtdbtk_data.tar.gz
-tar xvzf gtdbtk_data.tar.gz
-```
+1. Change to the directory where the GTDB should be stored
+2. Download the latest or your desired version of GTDB
+   Please make sure this version is compatible with GTDB-tk version `2.6.1`
+   ```
+   wget https://data.ace.uq.edu.au/public/gtdb/data/releases/latest/auxillary_files/gtdbtk_package/full_package/gtdbtk_data.tar.gz
+   ```
+3. Decompress the downloaded archive
+   ```
+   tar xzf gtdbtk_data.tar.gz
+   ```
+4. After successful step 3: the archive can be removed
+5. Please specify the path to your decompressed GTDB in the config file (see [Configuring workflow](#configuring-workflow))
+
 
 #### Install Snakemake
 Create a snakemake environment using [mamba](https://mamba.readthedocs.io/en/latest/) via:
 
- ```mamba create -c conda-forge -c bioconda -n snakemake snakemake=7.32.3```
+ ```mamba create -c conda-forge -c bioconda -n snakemake snakemake snakemake-storage-plugin-fs```
 
 For installation details, see the [instructions in the Snakemake documentation](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html).
 
@@ -114,8 +116,10 @@ For installation details, see the [instructions in the Snakemake documentation](
    - Specify a project name (`project-name`)
    - Specify filtering options for human reads (`human-filtering`)
    - Specify host filtering options, if you have a non-human host (`host-filtering`)
-   - Specify options for GTDB database (see [Download GTDB](#Download-GTDB))
-2. Provide sample information in the `config/pep/samples.csv` file while keeping the header and the format:
+   - Specify options for different databases:
+     - GTDB database needs to be downloaded before (see [Download GTDB](#Download-GTDB))
+     - other databases (kaiju, CheckM2, CARD, genomad) can be given as a local path or downloaded when running the pipeline
+2. Provide sample information in the `config/pep/samples.csv` file while keeping the header and the format as:
 
 ```
 sample_name,fq1,fq2
@@ -131,7 +135,7 @@ Test your configuration by performing a dry-run via
 ```snakemake --use-conda -n```
 
 Executing the workflow:
-```snakemake --use-conda --cores $N --rerun-incomplete```
+```snakemake --use-conda --cores $N -k```
 
 using `$N` cores. It is recommended to use all available cores.
 

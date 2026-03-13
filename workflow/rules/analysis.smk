@@ -26,6 +26,7 @@ rule gzip_proteins:
         fna="results/{project}/output/proteins/{sample}/{sample}_nucleotides.fna.gz",
         gff="results/{project}/output/proteins/{sample}/{sample}_annotations.gff.gz",
     threads: 20
+    priority: 1
     log:
         "logs/{project}/proteins/{sample}_gzip.log",
     conda:
@@ -35,26 +36,28 @@ rule gzip_proteins:
 
 
 # Plasmid analysis
-rule load_genomad_DB:
-    output:
-        folder=get_genomad_DB_folder(),
-        file=get_genomad_DB_file(),
-    params:
-        res_folder=lambda wildcards, output: Path(output.folder).parent,
-    log:
-        "logs/load_genomad_DB.log",
-    conda:
-        "../envs/genomad.yaml"
-    shell:
-        "genomad download-database {params.res_folder}/ > {log} 2>&1"
+
+if not config["genomad"]["use-local"]:
+
+    rule load_genomad_DB:
+        output:
+            folder=get_genomad_DB_folder(),
+            file=get_genomad_DB_file(),
+        params:
+            res_folder=lambda wildcards, output: Path(output.folder).parent,
+        log:
+            "logs/load_genomad_DB.log",
+        conda:
+            "../envs/genomad.yaml"
+        shell:
+            "genomad download-database {params.res_folder}/ > {log} 2>&1"
 
 
 rule genomad_run:
     input:
-        db=rules.load_genomad_DB.output.folder,
+        db=get_genomad_DB_folder(),
         asmbl=rules.gzip_assembly.output,
     output:
-        #outdir=temp(directory("results/{project}/genomad/{sample}/")),
         plasmid_tsv=temp(
             "results/{project}/genomad/{sample}/{sample}_summary/{sample}_plasmid_summary.tsv"
         ),
@@ -94,22 +97,24 @@ rule move_genomad_output:
 
 
 # Resistance analysis
-rule download_CARD_data:
-    output:
-        json=get_card_db_file(),
-    params:
-        download=config["card"]["url"],
-        folder=lambda wildcards, output: Path(output.json).parent,
-        filename=lambda wildcards, output: Path(output.json).name,
-    log:
-        "logs/CARD_data_download.log",
-    threads: 30
-    conda:
-        "../envs/unix.yaml"
-    shell:
-        "(cd {params.folder} && "
-        "wget {params.download} && "
-        "tar -xvf data ./{params.filename}) > {log} 2>&1"
+if not config["card"]["use-local"]:
+
+    rule download_CARD_data:
+        output:
+            json=get_card_db_file(),
+        params:
+            download=config["card"]["url"],
+            folder=lambda wildcards, output: Path(output.json).parent,
+            filename=lambda wildcards, output: Path(output.json).name,
+        log:
+            "logs/CARD_data_download.log",
+        threads: 30
+        conda:
+            "../envs/unix.yaml"
+        shell:
+            "(cd {params.folder} && "
+            "wget {params.download} && "
+            "tar -xvf data ./{params.filename}) > {log} 2>&1"
 
 
 rule CARD_load_DB_for_reads:
@@ -131,7 +136,7 @@ rule CARD_annotation:
         json=get_card_db_file(),
         load=rules.CARD_load_DB_for_reads.output,
     output:
-        done=temp(touch("results/CARD_annotation.done")),
+        #done=temp(touch("results/CARD_annotation.done")),
         ann=get_card_annotation_file(),
     params:
         folder=lambda wildcards, input: Path(input.json).parent,
@@ -165,6 +170,7 @@ rule CARD_read_run:
         "--clean -n {threads} > {log} 2>&1"
 
 
+"""
 rule CARD_read_sample_summary:
     input:
         txt=rules.CARD_read_run.output.txt,
@@ -179,6 +185,7 @@ rule CARD_read_sample_summary:
         "../envs/python.yaml"
     script:
         "../scripts/arg_summary_sample.py"
+
 
 
 # updates CARD database to use for contigs instead of reads
@@ -253,3 +260,4 @@ rule wrap_mag_ARGs:
         touch("results/{project}/output/ARGs/mags/{sample}/all_mags.done"),
     log:
         "logs/{project}/ARGs/mags/{sample}/all_mags.log",
+"""

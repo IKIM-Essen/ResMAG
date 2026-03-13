@@ -54,6 +54,8 @@ rule dastool_run:
         outdir=lambda wildcards, output: Path(output.bins).parent,
         threshold=0.001,
     threads: 64
+    resources:
+        heavy=2,
     log:
         "logs/{project}/das_tool/{sample}/das_tool_run.log",
     conda:
@@ -94,7 +96,8 @@ if bins_for_sample:
         output:
             bins=directory("results/{project}/output/fastas/{sample}/bins/"),
             done=touch("results/{project}/binning/das_tool/{sample}_bins.done"),
-        threads: 15
+        threads: 10
+        priority: 1
         log:
             "logs/{project}/bins/{sample}/gz_bins.log",
         conda:

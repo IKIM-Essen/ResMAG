@@ -1,17 +1,20 @@
-rule download_kaiju:
-    output:
-        db_files=get_kaiju_files(),
-    params:
-        download=config["kaiju"]["download"],
-        db_folder=lambda wildcards, output: Path(output.db_files[0]).parent,
-    log:
-        "logs/kaiju_DB_download.log",
-    conda:
-        "../envs/unix.yaml"
-    shell:
-        "(mkdir -p {params.db_folder} && "
-        "wget -c {params.download} -O - | "
-        "tar -zxv -C {params.db_folder}) > {log} 2>&1"
+# if there is no local database version to use, it is downloaded
+if not config["kaiju"]["use-local"]:
+
+    rule download_kaiju:
+        output:
+            db_files=get_kaiju_files(),
+        params:
+            download=config["kaiju"]["download"],
+            db_folder=lambda wildcards, output: Path(output.db_files[0]).parent,
+        log:
+            "logs/kaiju_DB_download.log",
+        conda:
+            "../envs/unix.yaml"
+        shell:
+            "(mkdir -p {params.db_folder} && "
+            "wget -c {params.download} -O - | "
+            "tar -zxv -C {params.db_folder}) > {log} 2>&1"
 
 
 rule run_kaiju:
@@ -76,86 +79,49 @@ rule kaiju2krona:
         "ktImportText -o {output.html} {output.krona}) > {log} 2>&1"
 
 
-if config["gtdb"]["use-local"]:
-
-    rule prepare_gtdb:
-        output:
-            done=temp(touch("results/GTDB_prep.done")),
-        params:
-            db_folder=get_gtdb_folder(),
-        threads: 1
-        log:
-            "logs/GTDB_prep.log",
-        conda:
-            "../envs/gtdbtk.yaml"
-        shell:
-            "(conda env config vars set "
-            "GTDBTK_DATA_PATH='{params.db_folder}') > {log} 2>&1"
-
-    rule gtdbtk_classify_wf:
-        input:
-            bins=rules.gzip_bins.output.bins,
-            db_prep=rules.prepare_gtdb.output.done,
-        output:
-            json="results/{project}/output/classification/bins/{sample}/gtdbtk.json",
-            outdir=temp(
-                directory(
-                    "results/{project}/output/classification/bins/{sample}/gtdbtk/"
-                )
-            ),
-        params:
-            clf_outdir=lambda wildcards, output: Path(output.json).parent,
-            json=lambda wildcards, output: Path(output.json).name,
-        threads: 20
-        log:
-            "logs/{project}/gtdbtk/{sample}_classify.log",
-        conda:
-            "../envs/gtdbtk.yaml"
-        shell:
-            "(gtdbtk classify_wf --prefix {wildcards.sample} -x fa.gz "
-            "--cpus {threads} --pplacer_cpus {threads} "
-            "--genome_dir {input.bins}/ --out_dir {output.outdir}/ && "
-            "cp {output.outdir}/{params.json} {params.clf_outdir}/) > {log} 2>&1"
-
-else:
-
-    rule download_GTDB:
-        output:
-            done=touch("results/gtdbtk_download_DB.done"),
-        log:
-            "logs/gtdbtk_download_DB.log",
-        threads: 64
-        conda:
-            "../envs/gtdbtk.yaml"
-        shell:
-            "download-db.sh > {log} 2>&1"
-
-    rule gtdbtk_classify_wf:
-        input:
-            bins=rules.gzip_bins.output.bins,
-            load=rules.download_GTDB.output.done,
-        output:
-            json="results/{project}/output/classification/bins/{sample}/gtdbtk.json",
-            outdir=temp(
-                directory(
-                    "results/{project}/output/classification/bins/{sample}/gtdbtk/"
-                )
-            ),
-        params:
-            clf_outdir=lambda wildcards, output: Path(output.json).parent,
-            json=lambda wildcards, output: Path(output.json).name,
-        threads: 64
-        log:
-            "logs/{project}/gtdbtk/{sample}_classify.log",
-        conda:
-            "../envs/gtdbtk.yaml"
-        shell:
-            "(gtdbtk classify_wf --prefix {wildcards.sample} -x fa.gz "
-            "--cpus {threads} --pplacer_cpus 30 "
-            "--genome_dir {input.bins}/ --out_dir {output.outdir}/ && "
-            "cp {output.outdir}/{params.json} {params.clf_outdir}/) > {log} 2>&1"
+rule prepare_gtdb:
+    output:
+        done=temp(touch("results/GTDB_prep.done")),
+    params:
+        db_folder=get_gtdb_folder(),
+    threads: 1
+    log:
+        "logs/GTDB_prep.log",
+    conda:
+        "../envs/gtdbtk.yaml"
+    shell:
+        "(conda env config vars set "
+        "GTDBTK_DATA_PATH='{params.db_folder}') > {log} 2>&1"
 
 
+rule gtdbtk_classify_wf:
+    input:
+        bins=rules.gzip_bins.output.bins,
+        db_prep=rules.prepare_gtdb.output.done,
+    output:
+        json="results/{project}/output/classification/bins/{sample}/gtdbtk.json",
+        outdir=temp(
+            directory("results/{project}/output/classification/bins/{sample}/gtdbtk/")
+        ),
+    params:
+        clf_outdir=lambda wildcards, output: Path(output.json).parent,
+        json=lambda wildcards, output: Path(output.json).name,
+    threads: 40
+    # to ensure only one of these commands are run at the same time
+    resources:
+        heavy=1,
+    log:
+        "logs/{project}/gtdbtk/{sample}_classify.log",
+    conda:
+        "../envs/gtdbtk.yaml"
+    shell:
+        "(gtdbtk classify_wf --prefix {wildcards.sample} -x fa.gz "
+        "--cpus {threads} --pplacer_cpus {threads} "
+        "--genome_dir {input.bins}/ --out_dir {output.outdir}/ && "
+        "cp {output.outdir}/{params.json} {params.clf_outdir}/) > {log} 2>&1"
+
+
+# combines bacterial and archaeal
 rule gtdb_summary:
     input:
         json=rules.gtdbtk_classify_wf.output.json,

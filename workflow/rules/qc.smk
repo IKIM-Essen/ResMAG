@@ -26,24 +26,6 @@ rule fastp:
         "v7.1.0/bio/fastp"
 
 
-"""# version in this wrapper: fastqc=0.12.1
-rule fastqc:
-    input:
-        rules.fastp.output.trimmed,
-        #get_trimmed_fastqs,
-    output:
-        html=temp("results/{project}/qc/fastqc/{sample}_trimmed.html"),
-        zip=temp("results/{project}/qc/fastqc/{sample}_trimmed_fastqc.zip"),
-    threads: 4
-    resources:
-        mem_mb=1024,
-    log:
-        "logs/{project}/fastqc/{sample}.log",
-    wrapper:
-        "v7.6.0/bio/fastqc"
-"""
-
-
 rule fastqc:
     input:
         rules.fastp.output.trimmed,

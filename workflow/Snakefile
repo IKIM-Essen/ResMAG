@@ -5,7 +5,7 @@
 
 from snakemake.utils import min_version
 
-min_version("6.3.0")
+min_version("9.0.0")
 
 
 configfile: "config/config.yaml"
@@ -45,6 +45,11 @@ rule all:
             project=get_project(),
             sample=get_samples(),
         ),
+        expand(
+            "results/{project}/output/proteins/{sample}/{sample}_proteins.faa.gz",
+            project=get_project(),
+            sample=get_samples(),
+        ),
         # fasta output
         expand(
             "results/{project}/output/fastas/{sample}/bins/",
@@ -69,21 +74,7 @@ rule all:
         ),
         # resistance analysis
         expand(
-            "results/{project}/output/resistance/CARD/reads/{sample}/{sample}_read_ARGs.csv",
+            "results/{project}/output/resistance/CARD/reads/{sample}/{sample}.gene_mapping_data.txt",
             project=get_project(),
             sample=get_samples(),
         ),
-        expand(
-            "results/{project}/output/resistance/CARD/assembly/{sample}/{sample}_assembly_ARGs.csv",
-            project=get_project(),
-            sample=get_samples(),
-        ),
-
-
-"""        
-        expand(
-            "results/{project}/output/resistance/CARD/mags/{sample}/all_mags.done",
-            project=get_project(),
-            sample=get_samples(),
-        ),
-"""

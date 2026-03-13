@@ -11,6 +11,9 @@ rule megahit:
     params:
         threshold=get_contig_length_threshold(),
     threads: 64
+    priority: 2
+    resources:
+        heavy=2,
     log:
         "logs/{project}/assembly/{sample}_megahit.log",
     conda:
@@ -79,6 +82,7 @@ rule gzip_assembly:
     output:
         "results/{project}/output/fastas/{sample}/{sample}.fa.gz",
     threads: 20
+    priority: 1
     log:
         "logs/{project}/assembly/{sample}_gzip.log",
     conda:
@@ -139,20 +143,3 @@ use rule qc_summary_report as assembly_report with:
         pattern=config["tablular-config"],
     log:
         "logs/{project}/report/assembly_rbt_csv.log",
-
-
-"""
-# remove megahit intermediate results when all dependent results are produced
-rule cleanup_megahit_output:
-    input:
-        # folder to remove
-        asmbl_folder=rules.megahit.output.outdir,
-        #dependent results
-        gz_asmbl=rules.gzip_assembly.output,
-        asmbl_summary=rules.assembly_summary.output.csv,
-        binning_done="results/{project}/binning/das_tool/{sample}_run.done",
-    output:
-        touch("results/{project}/megahit/{sample}_cleanup.done"),
-    log:
-        "logs/{project}/assembly/{sample}_cleanup.log",
-"""

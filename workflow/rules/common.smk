@@ -4,27 +4,12 @@ import os
 configfile: "config/config.yaml"
 
 
-def get_resource_path():
-    return config["data-handling"]["resources"]
-
-
 def get_project():
     return config["project-name"]
 
 
 def get_samples():
     return list(pep.sample_table["sample_name"].values)
-
-
-"""
-def get_fastqs(wildcards):
-    file_r1 = pep.sample_table.loc[wildcards.sample]["fq1"]
-    folder = str(Path(file_r1).parent)
-    filename_r1 = Path(file_r1).name
-    filename_r2 = Path(pep.sample_table.loc[wildcards.sample]["fq2"]).name
-    return [folder, filename_r1, filename_r2]
-
-"""
 
 
 def get_fastqs(wildcards):
@@ -68,27 +53,6 @@ def get_host_map_statistics(wildcards):
         return []
 
 
-def get_human_ref():
-    if config["human-filtering"]["use-local"]:
-        path = config["human-filtering"]["local-path"]
-    else:
-        path = config["human-filtering"]["download-path"]
-    filename = path.split("/")[-1]
-    local_ref = "".join([get_resource_path(), "ref_genome/", filename])
-    return local_ref
-
-
-def get_human_local_folder():
-    path = config["human-filtering"]["local-path"]
-    folder = Path(path).parent
-    return folder
-
-
-def get_checkm2_db():
-    file = "{}{}".format(get_resource_path(), config["checkm2"])
-    return file
-
-
 def get_filtered_fastqs(wildcards):
     return [
         "results/{project}/output/filtered_reads/{sample}_R1.fastq",
@@ -111,15 +75,6 @@ def get_gz_assembly(wildcards):
     return "results/{project}/output/fastas/{sample}/{sample}.fa.gz"
 
 
-def get_kaiju_files():
-    file = "".join([get_resource_path(), config["kaiju"]["fmi-file"]])
-    path = str(Path(file).parent)
-    fmi = Path(file).name
-    names = ["nodes.dmp", fmi, "names.dmp"]
-    files = ["/".join([path, name]) for name in names]
-    return files
-
-
 ## binning parameters
 def get_contig_length_threshold():
     return config["min-contig-length"]
@@ -134,6 +89,68 @@ def bins_for_sample(wildcards):
         return False
 
 
+def get_human_ref_download():
+    return config["human-filtering"]["download-path"]
+
+
+def get_human_ref():
+    if config["human-filtering"]["use-local"]:
+        path = config["human-filtering"]["local-path"]
+        return path
+    else:
+        path = get_human_ref_download()
+        filename = path.split("/")[-1]
+        local_ref = "".join(["resources/ref_genome/", filename])
+        return local_ref
+
+
+def get_host_ref():
+    return config["host-filtering"]["ref-genome"]
+
+
+def get_kaiju_files():
+    file = config["kaiju"]["fmi-file"]
+    path = str(Path(file).parent)
+    fmi = Path(file).name
+    names = ["nodes.dmp", fmi, "names.dmp"]
+    files = ["/".join([path, name]) for name in names]
+    return files
+
+
+def get_checkm2_db_folder():
+    return config["checkm2"]["db-folder"]
+
+
+def get_checkm2_db():
+    path = "".join([get_checkm2_db_folder(), "CheckM2_database/uniref100.KO.1.dmnd"])
+    return path
+
+
+def get_gtdb_folder():
+    return config["gtdb"]
+
+
+def get_genomad_DB_folder():
+    return config["genomad"]["db-folder"]
+
+
+def get_genomad_DB_file():
+    path = "".join([get_genomad_DB_folder(), "names.dmp"])
+    return path
+
+
+def get_card_db_file():
+    return config["card"]["db-file"]
+
+
+def get_card_annotation_file():
+    version = config["card"]["version"]
+    folder = str(Path(get_card_db_file()).parent)
+    path = "".join([folder, "/card_database_", version, ".fasta"])
+    return path
+
+
+"""
 def get_mag_fa(wildcards):
     folder = "results/{}/output/fastas/{}/mags/".format(
         wildcards.project, wildcards.sample
@@ -144,14 +161,6 @@ def get_mag_fa(wildcards):
         if binID.endswith("fa.gz")
     ]
     return files
-
-
-def get_binIDs_for_sample(wildcards):
-    folder = "results/{}/output/fastas/{}/mags/".format(
-        wildcards.project, wildcards.sample
-    )
-    binIDs = [binID for binID in os.listdir(folder) if binID.endswith("fa.gz")]
-    return binIDs
 
 
 def get_mag_ARGs(wildcards):
@@ -165,29 +174,4 @@ def get_mag_ARGs(wildcards):
         os.path.join(folder, binID.replace(".fa.gz", ".txt")) for binID in binIDs
     ]
     return arg_files
-
-
-def get_gtdb_folder():
-    path = "".join([get_resource_path(), config["gtdb"]["db-folder"]])
-    return path
-
-
-def get_genomad_DB_folder():
-    path = "".join([get_resource_path(), "genomad_db/"])
-    return path
-
-
-def get_genomad_DB_file():
-    path = "".join([get_genomad_DB_folder(), "names.dmp"])
-    return path
-
-
-def get_card_db_file():
-    path = "".join([get_resource_path(), "CARD_db/", config["card"]["dbfile"]])
-    return path
-
-
-def get_card_annotation_file():
-    version = config["card"]["version"]
-    path = "".join([get_resource_path(), "CARD_db/card_database_", version, ".fasta"])
-    return path
+"""

@@ -4,27 +4,15 @@ import sys
 sys.stderr = open(snakemake.log[0], "w")
 
 ## input files
-in_dastool = (
-    snakemake.input.tool
-)
-in_checkm = (
-    snakemake.input.checkm
-)
-in_gtdb = (
-    snakemake.input.gtdb
-)
+in_dastool = snakemake.input.tool
+in_checkm = snakemake.input.checkm
+in_gtdb = snakemake.input.gtdb
 
 ## output files
 ### csv
-csv_path_mags = (
-    snakemake.output.csv_mags
-)
-csv_path_bins = (
-    snakemake.output.csv_bins
-)
-csv_path_tax = (
-    snakemake.output.csv_tax
-)  
+csv_path_mags = snakemake.output.csv_mags
+csv_path_bins = snakemake.output.csv_bins
+csv_path_tax = snakemake.output.csv_tax
 
 ## params
 max_cont = snakemake.params.max_cont
@@ -133,23 +121,3 @@ mags_df = bins_df.loc[
 ]
 mags_df.index.name = "MAG"
 save_csv_table(csv_path_mags, mags_df)
-
-
-"""
-if we want to sort by mean of deviation from min completeness & max contamination
-
-mean_dict={}
-for binid in bins_df.index:
-    cont=bins_df.at[binid,"contamination"]
-    cont_per=round(((max_contamination - cont)/max_contamination), 4)
-    comp=bins_df.at[binid,"completeness"]
-    comp_per=round((comp/100),4)
-    mean_dict[binid]=round(((cont_per + comp_per)/2),4)
-
-to_sort=pd.DataFrame.from_dict(mean_dict,orient="index",columns=['mean'])
-
-# index list sorted by mean used to reindex original df
-new_ind=to_sort.sort_values(["mean"],ascending = [False]).index.to_list()
-sorted_all=bins_df.reindex(new_ind)
-
-"""
