@@ -117,12 +117,10 @@ def get_kaiju_files():
     return files
 
 
-def get_checkm2_db_folder():
-    return config["checkm2"]["db-folder"]
-
-
 def get_checkm2_db():
-    path = "".join([get_checkm2_db_folder(), "CheckM2_database/uniref100.KO.1.dmnd"])
+    path = "".join(
+        [config["checkm2"]["db-folder"], "CheckM2_database/uniref100.KO.1.dmnd"]
+    )
     return path
 
 
@@ -131,7 +129,8 @@ def get_gtdb_folder():
 
 
 def get_genomad_DB_folder():
-    return config["genomad"]["db-folder"]
+    path = "".join([config["genomad"]["db-folder"], "genomad_db/"])
+    return path
 
 
 def get_genomad_DB_file():

@@ -5,7 +5,7 @@ if not config["checkm2"]["use-local"]:
         output:
             dbfile=get_checkm2_db(),
         params:
-            direct=get_checkm2_db_folder(),
+            direct=lambda wildcards, output: Path(output.dbfile).parent.parent,
         log:
             "logs/checkm2_DB_download.log",
         conda:

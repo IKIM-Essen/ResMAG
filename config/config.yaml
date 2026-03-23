@@ -52,12 +52,15 @@ kaiju:
 
 checkm2:
   use-local: True
+  #if use-local False a folder named CheckM2_database will be created under the given path
   db-folder: /groups/ds/databases_refGenomes/databases/latest/checkM2/
 
 # folder of genomad DB
 genomad:
   use-local: True
-  db-folder: /groups/ds/databases_refGenomes/databases/latest/genomad/
+  # a folder named genomad_db is expected under the given path
+  # if use-local False this folder will be created
+  db-folder: /groups/ds/databases_refGenomes/databases/latest/
 
 card:
   use-local: True
