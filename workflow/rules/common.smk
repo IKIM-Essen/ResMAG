@@ -75,6 +75,10 @@ def get_gz_assembly(wildcards):
     return "results/{project}/output/fastas/{sample}/{sample}.fa.gz"
 
 
+def get_proteins(wildcards):
+    return ("results/{project}/output/proteins/{sample}/{sample}_proteins.faa.gz",)
+
+
 ## binning parameters
 def get_contig_length_threshold():
     return config["min-contig-length"]
@@ -149,7 +153,43 @@ def get_card_annotation_file():
     return path
 
 
+def get_uniCARD_db():
+    return config["uniCARD"]["db-file"]
+
+
+def get_CARD_hierarchy():
+    return config["uniCARD"]["hierarchy-json"]
+
+
+def get_uniCARD_db_wo_ext():
+    db_wo_ext = str(Path(get_uniCARD_db()).with_suffix(""))
+    return db_wo_ext
+
+
 """
+def is_uniCARD_fasta():
+    filename = str(Path(get_uniCARD_db()).name)
+    ext = "".join(Path(filename).suffixes)
+    if ext in ["fasta", "fasta.gz"]:
+        return True
+    else:
+        return False
+
+
+def get_uniCARD_db_wo_ext():
+    db_wo_ext = str(Path(get_uniCARD_db()).with_suffix(""))
+    if is_uniCARD_fasta():
+        db_wo_ext = db_wo_ext.with_suffix("")
+    return db_wo_ext
+
+
+def get_unicard_dmnd():
+    if is_uniCARD_fasta():
+        return "".join([get_uniCARD_db_wo_ext(), ".dmnd"])
+    else:
+        return get_uniCARD_db()
+
+
 def get_mag_fa(wildcards):
     folder = "results/{}/output/fastas/{}/mags/".format(
         wildcards.project, wildcards.sample

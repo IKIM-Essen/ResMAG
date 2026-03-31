@@ -68,6 +68,12 @@ card:
   version: v4.0.1
   url: https://card.mcmaster.ca/latest/data
 
+uniCARD:
+  #path to the .dmnd file of UniCARD database
+  db-file: /groups/ds/databases_refGenomes/databases/latest/uniCARD/uniCARD.dmnd
+  # path to CARDs hierarchy file
+  hierarchy-json: /groups/ds/databases_refGenomes/databases/latest/uniCARD/CARD_hierarchy_v4.0.0.json
+
 ## string term used for formatting output tables
 tablular-config: '/>github<\/a>/a \\t\t\t</li>\n\t\t\t<li class="nav-item"> \n\t\t\t\t<a class="nav-link" href="#">'
 

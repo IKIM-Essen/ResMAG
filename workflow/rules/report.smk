@@ -26,7 +26,11 @@ rule snakemake_report:
             sample=get_samples(),
         ),
         expand(
-            "results/{{project}}/output/report/{sample}/{sample}_kaiju.out.html",
+            "results/{{project}}/output/report/{sample}/{sample}_reads_kaiju.out.html",
+            sample=get_samples(),
+        ),
+        expand(
+            "results/{{project}}/output/report/{sample}/{sample}_contigs_kaiju.out.html",
             sample=get_samples(),
         ),
     output:

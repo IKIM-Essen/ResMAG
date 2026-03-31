@@ -1,102 +1,3 @@
-# gene identification
-rule gene_identification:
-    input:
-        contigs=get_assembly,
-    output:
-        faa="results/{project}/output/proteins/{sample}/{sample}_proteins.faa",
-        fna="results/{project}/output/proteins/{sample}/{sample}_nucleotides.fna",
-        gff="results/{project}/output/proteins/{sample}/{sample}_annotations.gff",
-    log:
-        "logs/{project}/proteins/{sample}.log",
-    conda:
-        "../envs/pprodigal.yaml"
-    threads: 32
-    shell:
-        "pprodigal -i {input.contigs} -o {output.gff} -a {output.faa} "
-        "-d {output.fna} -p meta --tasks {threads} > {log} 2>&1"
-
-
-rule gzip_proteins:
-    input:
-        faa=rules.gene_identification.output.faa,
-        fna=rules.gene_identification.output.fna,
-        gff=rules.gene_identification.output.gff,
-    output:
-        faa="results/{project}/output/proteins/{sample}/{sample}_proteins.faa.gz",
-        fna="results/{project}/output/proteins/{sample}/{sample}_nucleotides.fna.gz",
-        gff="results/{project}/output/proteins/{sample}/{sample}_annotations.gff.gz",
-    log:
-        "logs/{project}/proteins/{sample}_gzip.log",
-    priority: 1
-    conda:
-        "../envs/unix.yaml"
-    threads: 20
-    shell:
-        "gzip {input.faa} {input.fna} {input.gff} > {log} 2>&1"
-
-
-# Plasmid analysis
-
-if not config["genomad"]["use-local"]:
-
-    rule load_genomad_DB:
-        output:
-            folder=get_genomad_DB_folder(),
-            file=get_genomad_DB_file(),
-        log:
-            "logs/load_genomad_DB.log",
-        conda:
-            "../envs/genomad.yaml"
-        params:
-            res_folder=lambda wildcards, output: Path(output.folder).parent,
-        shell:
-            "genomad download-database {params.res_folder}/ > {log} 2>&1"
-
-
-rule genomad_run:
-    input:
-        db=get_genomad_DB_folder(),
-        asmbl=rules.gzip_assembly.output,
-    output:
-        plasmid_tsv=temp(
-            "results/{project}/genomad/{sample}/{sample}_summary/{sample}_plasmid_summary.tsv"
-        ),
-        virus_tsv=temp(
-            "results/{project}/genomad/{sample}/{sample}_summary/{sample}_virus_summary.tsv"
-        ),
-    log:
-        "logs/{project}/plasmids/{sample}_run.log",
-    conda:
-        "../envs/genomad.yaml"
-    threads: 64
-    params:
-        outdir=lambda wildcards, output: Path(output.plasmid_tsv).parent.parent,
-    shell:
-        "genomad end-to-end --cleanup -t {threads} "
-        "{input.asmbl} {params.outdir}/ "
-        "{input.db}/ > {log} 2>&1"
-
-
-rule move_genomad_output:
-    input:
-        plasmid_tsv=rules.genomad_run.output.plasmid_tsv,
-        virus_tsv=rules.genomad_run.output.virus_tsv,
-    output:
-        plasmid_tsv="results/{project}/output/plasmids/{sample}/{sample}_plasmid_summary.tsv",
-        virus_tsv="results/{project}/output/plasmids/{sample}/{sample}_virus_summary.tsv",
-    log:
-        "logs/{project}/plasmids/{sample}_move_output.log",
-    conda:
-        "../envs/unix.yaml"
-    threads: 32
-    params:
-        outdir=lambda wildcards, output: Path(output.plasmid_tsv).parent,
-        sum_folder=lambda wildcards, input: Path(input.plasmid_tsv).parent,
-    shell:
-        "scp {params.sum_folder}/*.tsv {params.sum_folder}/*.json {params.outdir}/ > {log} 2>&1"
-
-
-"""
 # Resistance analysis
 if not config["card"]["use-local"]:
 
@@ -170,7 +71,92 @@ rule CARD_read_run:
         "--clean -n {threads} > {log} 2>&1"
 
 
+"""
+if is_uniCARD_fasta:
 
+    rule uniCARD_makeDB:
+        input:
+            db=get_uniCARD_db(),
+        output:
+            dmdb=get_unicard_dmnd(),
+        log:
+            "logs/unicard_makeDB.log",
+        conda:
+            "../envs/diamond.yaml"
+        threads: 60
+        params:
+            filename=lambda wildcards, input: Path(input.db).name,
+            filename_wo_ext=Path(get_uniCARD_db_wo_ext()).name,
+            folder=lambda wildcards, input: Path(input.db).parent,
+        shell:
+            "(cd {params.folder} && diamond makedb --in {params.filename} -d {params.filename_wo_ext}) > {log} 2>&1"
+"""
+
+
+rule uniCARD_run:
+    input:
+        faa=get_proteins,
+        dmdb=get_uniCARD_db(),
+    output:
+        tsv=temp(
+            "results/{project}/output/resistance/uniCARD/assembly/{sample}_out.tsv"
+        ),
+    log:
+        "logs/{project}/uniCARD/{sample}.log",
+    # ensure priority over potential contig classification
+    priority: 1
+    conda:
+        "../envs/diamond.yaml"
+    threads: 60
+    # to ensure only one of these commands are run at the same time
+    resources:
+        heavy=1,
+    params:
+        db_wo_ext=get_uniCARD_db_wo_ext(),
+        max_targets=15,
+    shell:
+        "diamond blastp -q {input.faa} -d {params.db_wo_ext} "
+        "-p {threads} --max-target-seqs {params.max_targets} "
+        "-o {output.tsv} > {log} 2>&1"
+
+
+rule gz_uniCARD_tsv:
+    input:
+        unicard_in=rules.uniCARD_run.output.tsv,
+    output:
+        tsv=temp(
+            "results/{project}/output/resistance/uniCARD/assembly/{sample}_out.tsv.gz"
+        ),
+    log:
+        "logs/{project}/uniCARD/{sample}_gz.log",
+    conda:
+        "../envs/unix.yaml"
+    threads: 16
+    shell:
+        "(gzip -k {input.unicard_in}) > {log} 2>&1"
+
+
+rule filter_uniCARD:
+    input:
+        tsv=rules.gz_uniCARD_tsv.output.tsv,
+        json=get_CARD_hierarchy(),
+    output:
+        best="results/{project}/output/resistance/uniCARD/assembly/{sample}.csv",
+    log:
+        "logs/{project}/uniCARD/{sample}_filter.log",
+    conda:
+        "../envs/python.yaml"
+    threads: 20
+    params:
+        # filter window for filtering UniCARD results, default: 1%
+        filter_window=0.01,
+    shell:
+        "python workflow/scripts/uniCARD_filtering.py --infile {input.tsv} "
+        "--card_hierarchy {input.json} --outfile {output.best} "
+        "--filter_window {params.filter_window} > {log} 2>&1"
+
+
+"""
 rule CARD_read_sample_summary:
     input:
         txt=rules.CARD_read_run.output.txt,
