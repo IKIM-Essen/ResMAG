@@ -85,10 +85,8 @@ rule all:
             project=get_project(),
             sample=get_samples(),
         ),
-
-
-"""expand(
-    "results/{project}/output/proteins/{sample}/{sample}_proteins.faa.gz",
-    project=get_project(),
-    sample=get_samples(),
-),"""
+        expand(
+            "results/{project}/output/classification/assembly/{sample}/kaiju.out.gz",
+            project=get_project(),
+            sample=get_samples(),
+        ),

@@ -42,14 +42,19 @@ if __name__ == "__main__":
         for filename in os.listdir(directory)
         if filename.endswith(mod_ext)
     ]
-
-    print("starting to concatenate files")
-    for modfile in modfiles:
-        # Concatenate all modified files into a single file
-        cmd = f"cat {modfile} >> {output_tsv}"
+    if len(modfiles) == 0:
+        print("no metabat bins")
+        # create an empty file
+        cmd = f"touch {output_tsv}"
         os.system(cmd)
+    else:
+        print("starting to concatenate files")
+        for modfile in modfiles:
+            # Concatenate all modified files into a single file
+            cmd = f"cat {modfile} >> {output_tsv}"
+            os.system(cmd)
 
-    print("all files concatenated")
-    # remove all modified files after concatenating
-    cmd = f"rm {directory}/*{mod_ext}"
-    os.system(cmd)
+        print("all files concatenated")
+        # remove all modified files after concatenating
+        cmd = f"rm {directory}/*{mod_ext}"
+        os.system(cmd)
