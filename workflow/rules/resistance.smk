@@ -141,7 +141,7 @@ rule filter_uniCARD:
         tsv=rules.gz_uniCARD_tsv.output.tsv,
         json=get_CARD_hierarchy(),
     output:
-        best="results/{project}/output/resistance/uniCARD/assembly/{sample}.csv",
+        csv="results/{project}/output/resistance/uniCARD/assembly/{sample}.csv",
     log:
         "logs/{project}/uniCARD/{sample}_filter.log",
     conda:
@@ -152,28 +152,55 @@ rule filter_uniCARD:
         filter_window=0.01,
     shell:
         "python workflow/scripts/uniCARD_filtering.py --infile {input.tsv} "
-        "--card_hierarchy {input.json} --outfile {output.best} "
+        "--card_hierarchy {input.json} --outfile {output.csv} "
         "--filter_window {params.filter_window} > {log} 2>&1"
 
 
-"""
-rule CARD_read_sample_summary:
+rule resistance_abundance_per_sample:
     input:
-        txt=rules.CARD_read_run.output.txt,
+        csv=rules.filter_uniCARD.output.csv,
+        json=get_CARD_hierarchy(),
     output:
-        csv="results/{project}/output/resistance/CARD/reads/{sample}/{sample}_read_ARGs.csv",
-    params:
-        case="reads",
+        abd_class="results/{project}/output/resistance/uniCARD/per_sample_resistance_abundance/{sample}_drug_class_abundance.csv",
+        abd_ARGs="results/{project}/output/resistance/uniCARD/per_sample_resistance_abundance/{sample}_ARGs_abundance.csv",
     log:
-        "logs/{project}/ARGs/reads/{sample}.log",
-    threads: 2
+        "logs/{project}/uniCARD/{sample}_abundance.log",
     conda:
         "../envs/python.yaml"
+    threads: 5
     script:
-        "../scripts/arg_summary_sample.py"
+        "../scripts/uniCARD_abundance_sample.py"
 
 
+rule resistance_abundance_all:
+    input:
+        contig_files=expand(
+            "results/{{project}}/output/classification/assembly/{sample}/{sample}_classified_contigs.csv",
+            sample=get_samples(),
+        ),
+        abd_class_files=expand(
+            "results/{{project}}/output/resistance/uniCARD/per_sample_resistance_abundance/{sample}_drug_class_abundance.csv",
+            sample=get_samples(),
+        ),
+        abd_ARGs_files=expand(
+            "results/{{project}}/output/resistance/uniCARD/per_sample_resistance_abundance/{sample}_ARGs_abundance.csv",
+            sample=get_samples(),
+        ),
+    output:
+        abd_class_possible="results/{project}/output/resistance/uniCARD/{project}_drug_class_abundance_all_possible.csv",
+        abd_class_present="results/{project}/output/resistance/uniCARD/{project}_drug_class_abundance_all_present.csv",
+        abd_ARGs_possible="results/{project}/output/resistance/uniCARD/{project}_ARGs_abundance_all_possible.csv",
+        abd_ARGs_present="results/{project}/output/resistance/uniCARD/{project}_ARGs_abundance_all_present.csv",
+    log:
+        "logs/{project}/uniCARD/all_abundances.log",
+    conda:
+        "../envs/python.yaml"
+    threads: 5
+    script:
+        "../scripts/uniCARD_abundance.py"
 
+
+"""
 # updates CARD database to use for contigs instead of reads
 # read based classification must be finished before
 rule CARD_load_DB:

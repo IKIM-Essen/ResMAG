@@ -108,7 +108,7 @@ rule gzip_kaiju_contigs:
     conda:
         "../envs/unix.yaml"
     shell:
-        "gzip {input.report} > {log} 2>&1"
+        "gzip -k {input.report} > {log} 2>&1"
 
 
 use rule kaiju_table_reads as kaiju_table_contigs with:
@@ -124,8 +124,8 @@ use rule kaiju_table_reads as kaiju_table_contigs with:
 
 use rule kaiju2krona_reads as kaiju2krona_contigs with:
     input:
-        db_files=get_kaiju_files(),
         report=rules.run_kaiju_contigs.output.report,
+        db_files=get_kaiju_files(),
     output:
         krona=temp(
             "results/{project}/output/classification/assembly/{sample}/kaiju.out.krona"

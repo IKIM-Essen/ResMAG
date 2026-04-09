@@ -148,8 +148,10 @@ def get_card_db_file():
 
 def get_card_annotation_file():
     version = config["card"]["version"]
+    filename = "".join(["card_database_", version, ".fasta"])
     folder = str(Path(get_card_db_file()).parent)
-    path = "".join([folder, "/card_database_", version, ".fasta"])
+
+    path = "/".join([folder, filename])
     return path
 
 

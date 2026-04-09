@@ -75,16 +75,10 @@ rule all:
             sample=get_samples(),
         ),
         expand(
-            "results/{project}/output/resistance/uniCARD/assembly/{sample}.csv",
+            "results/{project}/output/resistance/uniCARD/{project}_drug_class_abundance_all_possible.csv",
             project=get_project(),
-            sample=get_samples(),
         ),
         #contig classification
-        expand(
-            "results/{project}/output/classification/assembly/{sample}/{sample}_classified_contigs.csv",
-            project=get_project(),
-            sample=get_samples(),
-        ),
         expand(
             "results/{project}/output/classification/assembly/{sample}/kaiju.out.gz",
             project=get_project(),
