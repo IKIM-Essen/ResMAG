@@ -16,13 +16,16 @@ if not config["kaiju"]["use-local"]:
             "wget -c {params.download} -O - | "
             "tar -zxv -C {params.db_folder}) > {log} 2>&1"
 
+
 # classification of reads
 rule run_kaiju_reads:
     input:
         db_files=get_kaiju_files(),
         fastqs=get_filtered_gz_fastqs,
     output:
-        report=temp("results/{project}/output/classification/reads/{sample}/kaiju.out"),
+        report=temp(
+            "results/{project}/output/classification/reads/{sample}/kaiju.out"
+        ),
     params:
         evalue=0.00001,
     threads: 64
@@ -85,7 +88,9 @@ rule run_kaiju_contigs:
         db_files=get_kaiju_files(),
         assembly=get_gz_assembly,
     output:
-        report=temp("results/{project}/output/classification/assembly/{sample}/kaiju.out"),
+        report=temp(
+            "results/{project}/output/classification/assembly/{sample}/kaiju.out"
+        ),
     threads: 60
     log:
         "logs/{project}/contig_classification/{sample}_kaiju_run.log",
@@ -130,7 +135,8 @@ use rule kaiju2krona_reads as kaiju2krona_contigs with:
         krona=temp(
             "results/{project}/output/classification/assembly/{sample}/kaiju.out.krona"
         ),
-        html=report("results/{project}/output/report/{sample}/{sample}_contigs_kaiju.out.html",
+        html=report(
+            "results/{project}/output/report/{sample}/{sample}_contigs_kaiju.out.html",
             htmlindex="index.html",
             category="5. Taxonomic classification",
             subcategory="5.3 Contig classification",
