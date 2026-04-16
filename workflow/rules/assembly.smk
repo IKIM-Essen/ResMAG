@@ -7,11 +7,13 @@ rule megahit:
     output:
         contigs=temp("results/{project}/megahit/{sample}/final.contigs.fa"),
         outdir=temp(directory("results/{project}/megahit/{sample}/")),
-        log="results/{project}/report_prerequisites/assembly/{sample}_megahit.log",
-        done=touch("results/{project}/megahit/{sample}.done"),
+        log="results/{project}/output/report/prerequisites/assembly/{sample}_megahit.log",
     params:
         threshold=get_contig_length_threshold(),
     threads: 64
+    priority: 2
+    resources:
+        heavy=2,
     log:
         "logs/{project}/assembly/{sample}_megahit.log",
     conda:
@@ -29,7 +31,7 @@ rule map_to_assembly:
         fastqs=get_filtered_gz_fastqs,
     output:
         bam=temp(
-            "results/{project}/report_prerequisites/assembly/{sample}_reads_mapped.bam"
+            "results/{project}/output/report/prerequisites/assembly/{sample}_reads_mapped.bam"
         ),
     threads: 64
     log:
@@ -47,7 +49,7 @@ rule index_assembly_alignment:
         rules.map_to_assembly.output.bam,
     output:
         bai=temp(
-            "results/{project}/report_prerequisites/assembly/{sample}_reads_mapped.bam.bai"
+            "results/{project}/output/report/prerequisites/assembly/{sample}_reads_mapped.bam.bai"
         ),
     threads: 20
     log:
@@ -63,7 +65,7 @@ rule reads_mapped_assembly:
         bam=rules.map_to_assembly.output.bam,
         bai=rules.index_assembly_alignment.output.bai,
     output:
-        bai="results/{project}/report_prerequisites/assembly/{sample}_reads_mapped.txt",
+        bai="results/{project}/output/report/prerequisites/assembly/{sample}_reads_mapped.txt",
     threads: 20
     log:
         "logs/{project}/assembly/{sample}_mapping_reads.log",
@@ -79,24 +81,33 @@ rule gzip_assembly:
         contigs=get_assembly,
     output:
         "results/{project}/output/fastas/{sample}/{sample}.fa.gz",
-    threads: 64
+    threads: 20
+    priority: 1
     log:
         "logs/{project}/assembly/{sample}_gzip.log",
     conda:
         "../envs/unix.yaml"
     shell:
-        "pigz -c {input.contigs} > {output} 2> {log}"
+        "gzip -c {input.contigs} > {output} 2> {log}"
 
 
 rule assembly_summary:
     input:
         qc_csv=rules.qc_summary.output.csv,
         asbl=expand(
-            "results/{{project}}/report_prerequisites/assembly/{sample}_megahit.log",
+            "results/{{project}}/output/report/prerequisites/assembly/{sample}_megahit.log",
             sample=get_samples(),
         ),
         mapped=expand(
-            "results/{{project}}/report_prerequisites/assembly/{sample}_reads_mapped.txt",
+            "results/{{project}}/output/report/prerequisites/assembly/{sample}_reads_mapped.txt",
+            sample=get_samples(),
+        ),
+        csv_bins=expand(
+            "results/{{project}}/output/report/{sample}/{sample}_bin_summary.csv",
+            sample=get_samples(),
+        ),
+        csv_mags=expand(
+            "results/{{project}}/output/report/{sample}/{sample}_mags_summary.csv",
             sample=get_samples(),
         ),
     output:
@@ -114,13 +125,15 @@ use rule qc_summary_report as assembly_report with:
     input:
         rules.assembly_summary.output.vis_csv,
     output:
-        report(
-            directory("results/{project}/output/report/all/assembly/"),
-            htmlindex="index.html",
-            category="3. Assembly results",
-            labels={
-                "sample": "all samples",
-            },
+        temp(
+            report(
+                directory("results/{project}/output/report/all/assembly/"),
+                htmlindex="index.html",
+                category="3. Assembly results",
+                labels={
+                    "sample": "all samples",
+                },
+            )
         ),
     params:
         pin_until="sample",
@@ -130,18 +143,3 @@ use rule qc_summary_report as assembly_report with:
         pattern=config["tablular-config"],
     log:
         "logs/{project}/report/assembly_rbt_csv.log",
-
-
-# remove megahit intermediate results when all dependent results are produced
-rule cleanup_megahit_output:
-    input:
-        # folder to remove
-        asmbl_folder=rules.megahit.output.outdir,
-        #dependent results
-        gz_asmbl=rules.gzip_assembly.output,
-        asmbl_summary=rules.assembly_summary.output.csv,
-        binning_done="results/{project}/binning/das_tool/{sample}_run.done",
-    output:
-        touch("results/{project}/megahit/{sample}_cleanup.done"),
-    log:
-        "logs/{project}/assembly/{sample}_cleanup.log",

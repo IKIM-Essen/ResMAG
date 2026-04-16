@@ -63,12 +63,10 @@ rule metacoag_run:
         contigs=get_assembly,
         gfa="results/{project}/binning_prep/{sample}/assembly_tree.gfa",
         abd="results/{project}/binning_prep/{sample}/abundance_metacoag.tsv",
+        #assembly folder needs to be there
+        folder=rules.megahit.output.outdir,
     output:
         out_tsv=temp("results/{project}/binning/metacoag/{sample}/contig_to_bin.tsv"),
-        folder=temp(directory("results/{project}/binning/metacoag/{sample}/")),
-        intermediate=temp(
-            "results/{project}/binning/metacoag/{sample}final.contigs.fa.normalized_contig_tetramers.pickle"
-        ),
     params:
         outdir=lambda wildcards, output: Path(output.out_tsv).parent,
     threads: 64
@@ -82,14 +80,3 @@ rule metacoag_run:
         "--output {params.outdir} --min_length 300 "
         "--bin_mg_threshold 0.2 --min_bin_size 100000 "
         "--nthreads {threads} > {log} 2>&1"
-
-
-rule cleanup_metacoag_output:
-    input:
-        folder=rules.metacoag_run.output.folder,
-        dastool="results/{project}/binning/das_tool/{sample}/{sample}_DASTool_summary.tsv",
-    output:
-        done=touch("results/{project}/binning/metacoag/{sample}_cleanup.done"),
-    threads: 2
-    log:
-        "logs/{project}/metacoag/{sample}/cleanup.log",

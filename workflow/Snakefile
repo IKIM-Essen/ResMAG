@@ -5,7 +5,7 @@
 
 from snakemake.utils import min_version
 
-min_version("6.3.0")
+min_version("9.0.0")
 
 
 configfile: "config/config.yaml"
@@ -20,7 +20,6 @@ report: "report/workflow.rst"
 include: "rules/common.smk"
 include: "rules/qc.smk"
 include: "rules/host_filtering.smk"
-include: "rules/trimming.smk"
 include: "rules/assembly.smk"
 include: "rules/metabat.smk"
 include: "rules/metacoag.smk"
@@ -28,6 +27,7 @@ include: "rules/das_tool.smk"
 include: "rules/bin_qc.smk"
 include: "rules/classify.smk"
 include: "rules/analysis.smk"
+include: "rules/resistance.smk"
 include: "rules/report.smk"
 
 
@@ -35,7 +35,7 @@ rule all:
     input:
         # read classification output
         expand(
-            "results/{project}/output/classification/reads/{sample}/{sample}_{level}_kaiju_summary.tsv",
+            "results/{project}/output/classification/reads/{sample}/{sample}_{level}_abundance.tsv",
             project=get_project(),
             sample=get_samples(),
             level=["species", "genus", "family", "order", "class", "phylum"],
@@ -63,48 +63,24 @@ rule all:
             project=get_project(),
             sample=get_samples(),
         ),
-        # resistance analysis
-        expand(
-            "results/{project}/output/ARGs/reads/{sample}/{sample}_read_ARGs.csv",
-            project=get_project(),
-            sample=get_samples(),
-        ),
-        expand(
-            "results/{project}/output/ARGs/assembly/{sample}/{sample}_assembly_ARGs.csv",
-            project=get_project(),
-            sample=get_samples(),
-        ),
         # overall report
         expand(
             "results/{project}/output/report/report_{project}.zip",
             project=get_project(),
         ),
+        # resistance analysis
         expand(
-            "results/{project}/megahit/{sample}_cleanup.done",
+            "results/{project}/output/resistance/CARD/reads/{sample}/{sample}.gene_mapping_data.txt",
             project=get_project(),
             sample=get_samples(),
         ),
         expand(
-            "results/{project}/binning/metabat/{sample}_cleanup.done",
+            "results/{project}/output/resistance/uniCARD/{project}_drug_class_abundance_all_possible.csv",
             project=get_project(),
-            sample=get_samples(),
         ),
+        #contig classification
         expand(
-            "results/{project}/binning/metacoag/{sample}_cleanup.done",
+            "results/{project}/output/classification/assembly/{sample}/kaiju.out.gz",
             project=get_project(),
             sample=get_samples(),
         ),
-        expand(
-            "results/{project}/binning/das_tool/{sample}_cleanup.done",
-            project=get_project(),
-            sample=get_samples(),
-        ),
-
-
-"""        
-        expand(
-            "results/{project}/output/ARGs/mags/{sample}/all_mags.done",
-            project=get_project(),
-            sample=get_samples(),
-        ),
-"""

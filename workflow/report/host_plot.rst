@@ -1,2 +1,0 @@
-A barplot for each sample, showing the percentage of human reads and if given also the percentage of reads of another host.
-The reads are classified by mapping against a reference genome using `minimap2 <https://github.com/lh3/minimap2>`_ and `samtools <https://github.com/samtools/samtools>`_.

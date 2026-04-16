@@ -3,8 +3,8 @@ channels:
   - bioconda
   - nodefaults
 dependencies:
-  - minimap2 = 2.24
-  - samtools = 1.16.1
+  - minimap2 = 2.30
+  - samtools = 1.23
   - pip
   - pip:
-    - Command
+      - Command

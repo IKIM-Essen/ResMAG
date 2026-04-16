@@ -3,4 +3,4 @@ channels:
   - bioconda
   - nodefaults
 dependencies:
-  - checkm2 = 1.0.1
+  - checkm2 = 1.1.0

@@ -2,16 +2,15 @@ name: Tests
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
-
+    branches: [main]
 
 jobs:
   Formatting:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
       - name: Formatting
         uses: github/super-linter@v5
         env:
@@ -23,33 +22,33 @@ jobs:
   Linting:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - name: Lint workflow
-      uses: snakemake/snakemake-github-action@v1
-      with:
-        directory: .
-        snakefile: workflow/Snakefile
-        args: "--lint"
+      - uses: actions/checkout@v6
+      - name: Lint workflow
+        uses: snakemake/snakemake-github-action@v2
+        with:
+          directory: .
+          snakefile: workflow/Snakefile
+          args: "--lint"
 
 #  Testing:
- #   runs-on: ubuntu-latest
-  #  needs: 
-   #   - Linting
-    #  - Formatting
+#   runs-on: ubuntu-latest
+#  needs:
+#   - Linting
+#  - Formatting
 #    steps:
- #   - uses: actions/checkout@v3
+#   - uses: actions/checkout@v3
 
 #    - name: Test workflow
- #     uses: snakemake/snakemake-github-action@v1
-  #    with:
-   #     directory: .tests
-    #    snakefile: workflow/Snakefile
-     #   args: "--use-conda --show-failed-logs --cores 3 --conda-cleanup-pkgs cache --all-temp"
+#     uses: snakemake/snakemake-github-action@v1
+#    with:
+#     directory: .tests
+#    snakefile: workflow/Snakefile
+#   args: "--use-conda --show-failed-logs --cores 3 --conda-cleanup-pkgs cache --all-temp"
 
 #    - name: Test report
- #     uses: snakemake/snakemake-github-action@v1
-  #    with:
-   #     directory: .test
-    #    snakefile: workflow/Snakefile
-     #   args: "--report report.zip"
+#     uses: snakemake/snakemake-github-action@v1
+#    with:
+#     directory: .test
+#    snakefile: workflow/Snakefile
+#   args: "--report report.zip"
 

@@ -31,7 +31,8 @@ fn_clean_exts:
   - "_L002_R2_001"
   - "_S"
   - ".1"
-  
+  - ".2"
+
 # customising general Statistics
 table_columns_visible:
   Reads Quality Control:

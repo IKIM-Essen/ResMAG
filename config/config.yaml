@@ -3,14 +3,6 @@ pepfile: config/pep/config.yaml
 ## Please change to a name describing your project
 ## All results can be found under results/project-name/
 project-name: "test"
-#
-run-date: "2025-06-26"
-
-data-handling:
-  # path to store data within the workflow
-  data: data/
-  # path where databases and reference genomes are stored
-  resources: resources/
 
 quality-criteria:
   # minimal length of acceptable reads
@@ -23,11 +15,11 @@ adapter-seqs: "-a CTGTCTCTTATACACATCT -g AGATGTGTATAAGAGACAG"
 # reads are always filtered for human contamination
 human-filtering:
   # if you have a human reference genome on your device,
-  # you can set use-local to True and specify the path to the human reference genome
-  use-local: False
+  # you can set use-shared to True and specify the path to the human reference genome
+  use-shared: True
   # path to a locally stored human reference genome
-  local-path: /groups/ds/databases_refGenomes/refGenomes/latest/human/GCA_000001405.29_GRCh38.p14_genomic.fna.gz
-  # if use-local = False the reference genome is downloaded via the following url
+  local-path: /groups/ds/databases_refGenomes/refGenomes/latest/human/GRCh38_latest_genomic.fna.gz
+  # if use-shared = False the reference genome is downloaded via the following url
   download-path: https://ftp.ncbi.nlm.nih.gov/refseq/H_sapiens/annotation/GRCh38_latest/refseq_identifiers/GRCh38_latest_genomic.fna.gz
 
 # if filtering for non-human host is required,
@@ -42,34 +34,45 @@ host-filtering:
 # minimum contig length used during assembly step
 min-contig-length: 300
 
-das-tool:
-  # cores to use for das_tool
-  threads: 64
-  binner-list: ["metabat", "metacoag"]
-
 MAG-criteria:
   min-completeness: 50.00
   max-contamination: 30.00
 
 ### Handling of different databases
+## The GTDB has about 140 Gb
+# please specify the folder where the decompressed database is stored
+gtdb: /groups/ds/databases_refGenomes/databases/latest/gtdb/release226/
+
 kaiju:
+  use-shared: True
+  # path of kaiju DB .fmi file
+  # if use-shared False: DB is downloaded and saved to this path
+  fmi-file: /groups/ds/databases_refGenomes/databases/latest/kaiju/refseq_nr/unpacked_2024-08-13/kaiju_db_refseq_nr.fmi
   download: https://kaiju-idx.s3.eu-central-1.amazonaws.com/2024/kaiju_db_refseq_nr_2024-08-13.tgz
-  fmi-file: kaiju_db/kaiju_db_refseq_nr.fmi
 
-checkm2: CheckM2_database/uniref100.KO.1.dmnd
+checkm2:
+  use-shared: True
+  #if use-shared False a folder named CheckM2_database will be created under the given path
+  db-folder: /groups/ds/databases_refGenomes/databases/latest/checkM2/
 
-## The GTDB has about 100 Gb
-## if use-local is set to False this will be downloaded during the pipeline run
-gtdb:
-  use-local: True
-  # if use-local is set to True, please specify the folder where the decompressed database is stored
-  # this path is expected to lay under the data-handling resources folder
-  db-folder: gtdb/release226/
+# folder of genomad DB
+genomad:
+  use-shared: True
+  # a folder named genomad_db is expected under the given path
+  # if use-shared False this folder will be created
+  db-folder: /groups/ds/databases_refGenomes/databases/latest/
 
 card:
-  version: v4.0.0
-  dbfile: card.json
+  use-shared: True
+  db-file: /groups/ds/databases_refGenomes/databases/latest/card/card.json
+  version: v4.0.1
   url: https://card.mcmaster.ca/latest/data
+
+uniCARD:
+  #path to the fasta.gz file of UniCARD database
+  db-file: /groups/ds/databases_refGenomes/databases/latest/uniCARD/uniCARD.fasta.gz
+  # path to CARDs hierarchy file
+  hierarchy-json: /groups/ds/databases_refGenomes/databases/latest/uniCARD/CARD_hierarchy_v4.0.0.json
 
 ## string term used for formatting output tables
 tablular-config: '/>github<\/a>/a \\t\t\t</li>\n\t\t\t<li class="nav-item"> \n\t\t\t\t<a class="nav-link" href="#">'

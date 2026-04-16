@@ -3,4 +3,4 @@ channels:
   - bioconda
   - nodefaults
 dependencies:
-  - metabat2 = 2.15
+  - metabat2 = 2.18

@@ -11,8 +11,8 @@ if snakemake.params.other_host:
     hostname=snakemake.params.hostname
     host_logs = snakemake.input.host_logs
 
-outfile = snakemake.output.csv #"/local/work/josefa/ResMAG/results/lanuv/output/report/all/seq_summary.csv"
-outfile_vis = snakemake.output.vis_csv #"/local/work/josefa/ResMAG/results/lanuv/output/report/all/seq_summary_vis.csv"
+outfile = snakemake.output.csv
+outfile_vis = snakemake.output.vis_csv
 
 results_dict = {}
 
@@ -29,21 +29,21 @@ for json_file in jsons:
         total_pre_host_filt = int(jdata["summary"]["after_filtering"]["total_reads"])
         sample_results_dict["#reads_afterQC"] = total_pre_host_filt
 
-        sample_results_dict["%reads_filtered_by_quality"] = round(((1 - (total_pre_host_filt/reads_before)) * 100),4)
+        sample_results_dict["%reads_filtered_by_quality"] = round(((1 - (total_pre_host_filt/reads_before)) * 100),2)
 
         sample_results_dict["#bp_afterQC"] = int(jdata["summary"]["after_filtering"]["total_bases"])
 
-        sample_results_dict["%Q30_reads_afterQC"] = float(jdata["summary"]["after_filtering"]["q30_rate"]) * 100
+        sample_results_dict["%Q30_reads_afterQC"] = round((float(jdata["summary"]["after_filtering"]["q30_rate"]) * 100),2)
 
     if snakemake.params.other_host:
         for host_log in host_logs:
-            if host_log.find(sample) >= 0:
+            if host_log.find(f'{sample}_filter_host') >= 0:
                 with open(host_log, "r") as file:
                     for line in file.readlines():
                         if line.find("processed") >= 0:
                             non_host_reads = int(line.split()[2]) * 2
                             no_reads = total_pre_host_filt - non_host_reads
-                            prct_reads = round(((int(no_reads) / int(total_pre_host_filt)) * 100),4)
+                            prct_reads = round(((int(no_reads) / int(total_pre_host_filt)) * 100),2)
                             break
 
                 sample_results_dict[f"#{hostname}_reads"] = no_reads
@@ -52,7 +52,7 @@ for json_file in jsons:
 
 
     for human_log in human_logs:
-        if human_log.find(sample) >= 0:
+        if human_log.find(f'{sample}_filter_human') >= 0:
             with open(human_log, "r") as file:
                 for line in file.readlines():
                     if line.find("processed") >= 0:
@@ -61,7 +61,7 @@ for json_file in jsons:
                             no_reads = non_host_reads - non_human_reads
                         else:
                             no_reads = total_pre_host_filt - non_human_reads
-                        prct_reads = round(((int(no_reads) / int(total_pre_host_filt)) * 100),4)
+                        prct_reads = round(((int(no_reads) / int(total_pre_host_filt)) * 100),2)
                         break
 
             sample_results_dict[f"#human_reads"] = no_reads
@@ -69,7 +69,7 @@ for json_file in jsons:
             break
     
     sample_results_dict["#reads_after_filtering"] = non_human_reads
-    sample_results_dict["%reads_filtered_total"] = round(((1 - (non_human_reads/reads_before)) * 100),4)
+    sample_results_dict["%reads_filtered_total"] = round(((1 - (non_human_reads/reads_before)) * 100),2)
 
     results_dict[sample] = sample_results_dict
 

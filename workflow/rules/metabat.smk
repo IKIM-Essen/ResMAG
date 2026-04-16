@@ -36,14 +36,3 @@ rule metabat:
         "-m 1500 -s 100000 "
         "--minCorr 95 --minContigByCorr 300 --minSamples 1 "
         "-t {threads} -v -l -o {output}/{params.prefix} > {log} 2>&1"
-
-
-rule cleanup_metabat_output:
-    input:
-        folder=rules.metabat.output.outdir,
-        dastool="results/{project}/binning/das_tool/{sample}/{sample}_DASTool_summary.tsv",
-    output:
-        done=touch("results/{project}/binning/metabat/{sample}_cleanup.done"),
-    threads: 2
-    log:
-        "logs/{project}/metabat/{sample}/cleanup.log",

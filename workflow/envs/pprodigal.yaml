@@ -3,4 +3,4 @@ channels:
   - bioconda
   - nodefaults
 dependencies:
-  - rgi = 6.0.5
+  - pprodigal = 1.0.1

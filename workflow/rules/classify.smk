@@ -1,20 +1,24 @@
-rule download_kaiju:
-    output:
-        db_files=get_kaiju_files(),
-    params:
-        download=config["kaiju"]["download"],
-        db_folder=lambda wildcards, output: Path(output.db_files[0]).parent,
-    log:
-        "logs/kaiju_DB_download.log",
-    conda:
-        "../envs/unix.yaml"
-    shell:
-        "(mkdir -p {params.db_folder} && "
-        "wget -c {params.download} -O - | "
-        "tar -zxv -C {params.db_folder}) > {log} 2>&1"
+# if there is no local database version to use, it is downloaded
+if not config["kaiju"]["use-shared"]:
+
+    rule download_kaiju:
+        output:
+            db_files=get_kaiju_files(),
+        params:
+            download=config["kaiju"]["download"],
+            db_folder=lambda wildcards, output: Path(output.db_files[0]).parent,
+        log:
+            "logs/kaiju_DB_download.log",
+        conda:
+            "../envs/unix.yaml"
+        shell:
+            "(mkdir -p {params.db_folder} && "
+            "wget -c {params.download} -O - | "
+            "tar -zxv -C {params.db_folder}) > {log} 2>&1"
 
 
-rule run_kaiju:
+# classification of reads
+rule run_kaiju_reads:
     input:
         db_files=get_kaiju_files(),
         fastqs=get_filtered_gz_fastqs,
@@ -24,7 +28,7 @@ rule run_kaiju:
         evalue=0.00001,
     threads: 64
     log:
-        "logs/{project}/kaiju/{sample}_run.log",
+        "logs/{project}/kaiju/{sample}_reads_run.log",
     conda:
         "../envs/kaiju.yaml"
     shell:
@@ -33,15 +37,15 @@ rule run_kaiju:
         "-j {input.fastqs[1]} -o {output.report} > {log} 2>&1"
 
 
-rule kaiju_table:
+rule kaiju_table_reads:
     input:
-        report=rules.run_kaiju.output.report,
+        report=rules.run_kaiju_reads.output.report,
         db_files=get_kaiju_files(),
     output:
-        summary="results/{project}/output/classification/reads/{sample}/{sample}_{level}_kaiju_summary.tsv",
+        summary="results/{project}/output/classification/reads/{sample}/{sample}_{level}_abundance.tsv",
     threads: 2
     log:
-        "logs/{project}/kaiju/{sample}_{level}_table.log",
+        "logs/{project}/kaiju/{sample}_reads_{level}_table.log",
     conda:
         "../envs/kaiju.yaml"
     shell:
@@ -51,23 +55,23 @@ rule kaiju_table:
         # -p to print full taxonomy
 
 
-rule kaiju2krona:
+rule kaiju2krona_reads:
     input:
         db_files=get_kaiju_files(),
-        report=rules.run_kaiju.output.report,
+        report=rules.run_kaiju_reads.output.report,
     output:
         krona=temp(
             "results/{project}/output/classification/reads/{sample}/kaiju.out.krona"
         ),
         html=report(
-            "results/{project}/output/report/{sample}/{sample}_kaiju.out.html",
+            "results/{project}/output/report/{sample}/{sample}_reads_kaiju.out.html",
             htmlindex="index.html",
             category="5. Taxonomic classification",
             subcategory="5.2 Read classification",
             labels={"sample": "{sample}"},
         ),
     log:
-        "logs/{project}/kaiju/{sample}_2krona.log",
+        "logs/{project}/kaiju/{sample}_reads_2krona.log",
     conda:
         "../envs/kaiju.yaml"
     shell:
@@ -76,86 +80,144 @@ rule kaiju2krona:
         "ktImportText -o {output.html} {output.krona}) > {log} 2>&1"
 
 
-if config["gtdb"]["use-local"]:
-
-    rule prepare_gtdb:
-        output:
-            done=touch("results/GTDB_prep.done"),
-        params:
-            db_folder=get_gtdb_folder(),
-        threads: 1
-        log:
-            "logs/GTDB_prep.log",
-        conda:
-            "../envs/gtdbtk.yaml"
-        shell:
-            "(conda env config vars set "
-            "GTDBTK_DATA_PATH='{params.db_folder}') > {log} 2>&1"
-
-    rule gtdbtk_classify_wf:
-        input:
-            bins=rules.gzip_bins.output.bins,
-            db_prep=rules.prepare_gtdb.output.done,
-        output:
-            json="results/{project}/output/classification/bins/{sample}/gtdbtk.json",
-            outdir=temp(
-                directory(
-                    "results/{project}/output/classification/bins/{sample}/gtdbtk/"
-                )
-            ),
-        params:
-            db_folder=get_gtdb_folder(),
-            clf_outdir=lambda wildcards, output: Path(output.json).parent,
-            json=lambda wildcards, output: Path(output.json).name,
-        threads: 64
-        log:
-            "logs/{project}/gtdbtk/{sample}_classify.log",
-        conda:
-            "../envs/gtdbtk.yaml"
-        shell:
-            "(gtdbtk classify_wf --prefix {wildcards.sample} -x fa.gz "
-            "--mash_db {params.db_folder}mash_db/ --cpus 40 "
-            "--genome_dir {input.bins}/ --out_dir {output.outdir}/ && "
-            "cp {output.outdir}/{params.json} {params.clf_outdir}/) > {log} 2>&1"
-
-else:
-
-    rule download_GTDB:
-        output:
-            done=touch("results/gtdbtk_download_DB.done"),
-        log:
-            "logs/gtdbtk_download_DB.log",
-        threads: 64
-        conda:
-            "../envs/gtdbtk.yaml"
-        shell:
-            "download-db.sh > {log} 2>&1"
-
-    rule gtdbtk_classify_wf:
-        input:
-            bins=rules.gzip_bins.output.bins,
-            load=rules.download_GTDB.output.done,
-        output:
-            json="results/{project}/output/classification/bins/{sample}/gtdbtk.json",
-            outdir=temp(
-                directory(
-                    "results/{project}/output/classification/bins/{sample}/gtdbtk/"
-                )
-            ),
-        params:
-            clf_outdir=lambda wildcards, output: Path(output.json).parent,
-            json=lambda wildcards, output: Path(output.json).name,
-        threads: 64
-        log:
-            "logs/{project}/gtdbtk/{sample}_classify.log",
-        conda:
-            "../envs/gtdbtk.yaml"
-        shell:
-            "(gtdbtk classify_wf --prefix {wildcards.sample} -x fa.gz "
-            "--cpus {threads} --genome_dir {input.bins}/ --out_dir {output.outdir}/ && "
-            "cp {output.outdir}/{params.json} {params.clf_outdir}/) > {log} 2>&1"
+# classification of contigs
+rule run_kaiju_contigs:
+    input:
+        db_files=get_kaiju_files(),
+        assembly=get_gz_assembly,
+    output:
+        report=temp(
+            "results/{project}/output/classification/assembly/{sample}/kaiju.out"
+        ),
+    threads: 60
+    log:
+        "logs/{project}/contig_classification/{sample}_kaiju_run.log",
+    conda:
+        "../envs/kaiju.yaml"
+    shell:
+        "kaiju -z {threads} -t {input.db_files[0]} -f {input.db_files[1]} "
+        "-i {input.assembly} -o {output.report} > {log} 2>&1"
 
 
+rule gzip_kaiju_contigs:
+    input:
+        report=rules.run_kaiju_contigs.output.report,
+    output:
+        report="results/{project}/output/classification/assembly/{sample}/kaiju.out.gz",
+    threads: 20
+    priority: 1
+    log:
+        "logs/{project}/contig_classification/{sample}_kaiju_gzip.log",
+    conda:
+        "../envs/unix.yaml"
+    shell:
+        "gzip -k {input.report} > {log} 2>&1"
+
+
+use rule kaiju_table_reads as kaiju_table_contigs with:
+    input:
+        report=rules.run_kaiju_contigs.output.report,
+        db_files=get_kaiju_files(),
+    output:
+        summary="results/{project}/output/classification/assembly/{sample}/{sample}_{level}_abundance.tsv",
+    threads: 2
+    log:
+        "logs/{project}/contig_classification/{sample}_{level}_table.log",
+
+
+use rule kaiju2krona_reads as kaiju2krona_contigs with:
+    input:
+        report=rules.run_kaiju_contigs.output.report,
+        db_files=get_kaiju_files(),
+    output:
+        krona=temp(
+            "results/{project}/output/classification/assembly/{sample}/kaiju.out.krona"
+        ),
+        html=report(
+            "results/{project}/output/report/{sample}/{sample}_contigs_kaiju.out.html",
+            htmlindex="index.html",
+            category="5. Taxonomic classification",
+            subcategory="5.3 Contig classification",
+            labels={"sample": "{sample}"},
+        ),
+    log:
+        "logs/{project}/contig_classification/{sample}_2krona.log",
+
+
+rule extract_contig_headers:
+    input:
+        assembly=get_gz_assembly,
+    output:
+        headers="results/{project}/output/classification/assembly/{sample}/headers.txt",
+    threads: 10
+    log:
+        "logs/{project}/contig_classification/{sample}_header.log",
+    conda:
+        "../envs/unix.yaml"
+    shell:
+        "(zgrep '>' {input.assembly} > {output.headers}) > {log} 2>&1"
+
+
+rule contig_classification:
+    input:
+        out=rules.run_kaiju_contigs.output.report,
+        genus="results/{project}/output/classification/assembly/{sample}/{sample}_genus_abundance.tsv",
+        species="results/{project}/output/classification/assembly/{sample}/{sample}_species_abundance.tsv",
+        headers=rules.extract_contig_headers.output.headers,
+    output:
+        csv="results/{project}/output/classification/assembly/{sample}/{sample}_classified_contigs.csv",
+    log:
+        "logs/{project}/contig_classification/{sample}_classified_contigs.log",
+    threads: 5
+    conda:
+        "../envs/python.yaml"
+    script:
+        "../scripts/contig_classification.py"
+
+
+rule prepare_gtdb:
+    output:
+        done=temp(touch("results/GTDB_prep.done")),
+    params:
+        db_folder=get_gtdb_folder(),
+    threads: 1
+    log:
+        "logs/GTDB_prep.log",
+    conda:
+        "../envs/gtdbtk.yaml"
+    shell:
+        "(conda env config vars set "
+        "GTDBTK_DATA_PATH='{params.db_folder}') > {log} 2>&1"
+
+
+rule gtdbtk_classify_wf:
+    input:
+        bins=rules.gzip_bins.output.bins,
+        db_prep=rules.prepare_gtdb.output.done,
+    output:
+        json="results/{project}/output/classification/bins/{sample}/gtdbtk.json",
+        outdir=temp(
+            directory("results/{project}/output/classification/bins/{sample}/gtdbtk/")
+        ),
+    params:
+        clf_outdir=lambda wildcards, output: Path(output.json).parent,
+        json=lambda wildcards, output: Path(output.json).name,
+    threads: 40
+    # to ensure only one of these commands are run at the same time
+    resources:
+        heavy=1,
+    log:
+        "logs/{project}/gtdbtk/{sample}_classify.log",
+    conda:
+        "../envs/gtdbtk.yaml"
+    shell:
+        "(gtdbtk classify_wf --prefix {wildcards.sample} -x fa.gz "
+        "--cpus {threads} --pplacer_cpus {threads} "
+        "--genome_dir {input.bins}/ --out_dir {output.outdir}/ && "
+        "cp {output.outdir}/{params.json} {params.clf_outdir}/) > {log} 2>&1"
+
+
+# combines bacterial and archaeal
 rule gtdb_summary:
     input:
         json=rules.gtdbtk_classify_wf.output.json,

@@ -1,40 +1,20 @@
 from pathlib import Path
 
-
-if config["human-filtering"]["use-local"]:
-
-    rule copy_local_human_ref:
-        output:
-            fasta=get_human_ref(),
-        params:
-            local=get_human_local_folder(),
-            folder=lambda wildcards, output: Path(output.fasta).parent,
-            file=lambda wildcards, output: Path(output.fasta).name,
-        log:
-            "logs/human_ref_local_copy.log",
-        group:
-            "refGenome_depended"
-        conda:
-            "../envs/unix.yaml"
-        shell:
-            "(mkdir -p {params.folder} && "
-            "tar cpfz - -C {params.local} {params.file} | "
-            "(cd {params.folder} ; tar xpfz -)) > {log} 2>&1"
-
-else:
+# Download human reference genome if not local file is given
+if not config["human-filtering"]["use-shared"]:
 
     rule download_human_ref:
         output:
             fasta=get_human_ref(),
-        params:
-            download=config["human-filtering"]["download-path"],
-            folder=lambda wildcards, output: Path(output.fasta).parent,
         log:
             "logs/human_ref_download.log",
         group:
             "refGenome_depended"
         conda:
             "../envs/unix.yaml"
+        params:
+            download=get_human_ref_download(),
+            folder=lambda wildcards, output: Path(output.fasta).parent,
         shell:
             "(mkdir -p {params.folder} && "
             "cd {params.folder} && "
@@ -47,11 +27,11 @@ rule map_to_human:
         ref=get_human_ref(),
     output:
         bam=temp("results/{project}/human_filtering/alignments/{sample}.bam"),
-    threads: 64
     log:
         "logs/{project}/human_filtering/map_to_human_{sample}.log",
     conda:
         "../envs/minimap2.yaml"
+    threads: 64
     shell:
         "(minimap2 -a -xsr -t {threads} {input.ref} {input.fastqs} | "
         "samtools view -bh | "
@@ -63,11 +43,11 @@ rule index_human_alignment:
         rules.map_to_human.output.bam,
     output:
         bai=temp("results/{project}/human_filtering/alignments/{sample}.bam.bai"),
-    threads: 20
     log:
         "logs/{project}/human_filtering/index_human_alignment_{sample}.log",
     conda:
         "../envs/minimap2.yaml"
+    threads: 20
     shell:
         "samtools index {input} > {log} 2>&1"
 
@@ -79,15 +59,15 @@ rule filter_human:
     output:
         filtered=temp(
             expand(
-                "results/{{project}}/filtered/fastqs/{{sample}}_{read}.fastq",
+                "results/{{project}}/output/filtered_reads/{{sample}}_{read}.fastq",
                 read=["R1", "R2"],
             )
         ),
-    threads: 64
     log:
-        "results/{project}/report_prerequisites/qc/filter_human_{sample}.log",
+        "results/{project}/output/report/prerequisites/qc/{sample}_filter_human.log",
     conda:
         "../envs/minimap2.yaml"
+    threads: 64
     shell:
         "(samtools fastq --threads {threads} -F 3584 -f 77 "
         "-o {output.filtered[0]} {input.bam} && "
@@ -97,16 +77,17 @@ rule filter_human:
 
 rule gzip_filtered_reads:
     input:
-        "results/{project}/filtered/fastqs/{sample}_{read}.fastq",
+        "results/{project}/output/filtered_reads/{sample}_{read}.fastq",
     output:
-        "results/{project}/filtered/fastqs/{sample}_{read}.fastq.gz",
+        "results/{project}/output/filtered_reads/{sample}_{read}.fastq.gz",
     log:
         "logs/{project}/human_filtering/gzip_{sample}_{read}.log",
-    threads: 64
+    priority: 1
     conda:
         "../envs/unix.yaml"
+    threads: 20
     shell:
-        "pigz -k {input} > {log} 2>&1"
+        "gzip -k {input} > {log} 2>&1"
 
 
 if config["host-filtering"]["do-host-filtering"]:
@@ -116,23 +97,21 @@ if config["host-filtering"]["do-host-filtering"]:
     use rule map_to_human as map_to_host with:
         input:
             fastqs=get_trimmed_fastqs,
-            ref=config["host-filtering"]["ref-genome"],
+            ref=get_host_ref(),
         output:
             bam=temp("results/{project}/host_filtering/alignments/{sample}.bam"),
-        params:
-            ref=config["host-filtering"]["ref-genome"],
-        threads: 20
         log:
             "logs/{project}/host_filtering/map_to_host_{sample}.log",
+        threads: 20
 
     use rule index_human_alignment as index_host_alignment with:
         input:
             rules.map_to_host.output.bam,
         output:
             bai=temp("results/{project}/host_filtering/alignments/{sample}.bam.bai"),
-        threads: 3
         log:
             "logs/{project}/host_filtering/index_host_alignment_{sample}.log",
+        threads: 3
 
     rule filter_host:
         input:
@@ -145,90 +124,13 @@ if config["host-filtering"]["do-host-filtering"]:
                     read=["R1", "R2"],
                 )
             ),
-        threads: 64
         log:
-            "results/{project}/report_prerequisites/qc/filter_host_{sample}.log",
+            "results/{project}/output/report/prerequisites/qc/{sample}_filter_host.log",
         conda:
             "../envs/minimap2.yaml"
+        threads: 64
         shell:
             "(samtools fastq -F 3584 -f 77 {input.bam} | "
-            "pigz -c > {output.filtered[0]} && "
+            "gzip -c > {output.filtered[0]} && "
             "samtools fastq -F 3584 -f 141 {input.bam} | "
-            "pigz -c > {output.filtered[1]}) > {log} 2>&1"
-
-
-## TODO
-## change to using kaiju output or just to present human contamination
-## all reports are done on human (+ optional other different host) filtered
-"""rule diversity_summary:
-    input:
-        reports=expand(
-            "results/{{project}}/output/classification/reads/{sample}/{sample}_kraken2_report.tsv",
-            sample=get_samples(),
-        ),
-        jsons=expand(
-            "results/{{project}}/report_prerequisites/qc/{sample}.fastp.json",
-            sample=get_samples(),
-        ),
-        human_logs=expand(
-            "results/{{project}}/report_prerequisites/qc/filter_human_{sample}.log",
-            sample=get_samples(),
-        ),
-        host_logs=get_host_map_statistics,
-    output:
-        csv="results/{project}/output/report/all/diversity_summary.csv",
-    log:
-        "logs/{project}/kraken2/summary.log",
-    params:
-        other_host=config["host-filtering"]["do-host-filtering"],
-        hostname=config["host-filtering"]["host-name"],
-    threads: 2
-    conda:
-        "../envs/python.yaml"
-    script:
-        "../scripts/diversity_summary.py"
-
-
-use rule qc_summary_report as diversity_summary_report with:
-    input:
-        rules.diversity_summary.output.csv,
-    output:
-        report(
-            directory("results/{project}/output/report/all/diversity_summary/"),
-            htmlindex="index.html",
-            caption="../report/kraken.rst",
-            category="2. Species diversity",
-            labels={
-                "sample": "all samples",
-            },
-        ),
-    params:
-        pin_until="sample",
-        styles="resources/report/tables/",
-        name="diversity_summary",
-        header="Diversity summary based on mapping to host genome(s) and Kraken2",
-        pattern=config["tablular-config"],
-    log:
-        "logs/{project}/report/kraken2_rbt_csv.log",
-
-
-rule create_host_plot:
-    input:
-        csv=rules.diversity_summary.output.csv,
-    output:
-        html=report(
-            "results/{project}/output/report/all/host_contamination.html",
-            caption="../report/host_plot.rst",
-            category="2. Species diversity",
-            labels={"sample": "all samples"},
-        ),
-    params:
-        other_host=config["host-filtering"]["do-host-filtering"],
-        hostname=config["host-filtering"]["host-name"],
-    log:
-        "logs/{project}/report/host_plot.log",
-    conda:
-        "../envs/python.yaml"
-    script:
-        "../scripts/plot_host.py"
-"""
+            "gzip -c > {output.filtered[1]}) > {log} 2>&1"

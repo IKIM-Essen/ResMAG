@@ -5,7 +5,7 @@ rule postprocess_metabat:
     input:
         outdir=rules.metabat.output.outdir,
     output:
-        "results/{project}/output/contig2bins/{sample}/metabat_contig2bin.tsv",
+        tsv="results/{project}/output/contig2bins/{sample}/metabat_contig2bin.tsv",
     params:
         binner="metabat",
         prefix="bin",
@@ -21,9 +21,8 @@ rule postprocess_metabat:
 rule postprocess_metacoag:
     input:
         c2bin="results/{project}/binning/metacoag/{sample}/contig_to_bin.tsv",
-        folder="results/{project}/binning/metacoag/{sample}/",
     output:
-        "results/{project}/output/contig2bins/{sample}/metacoag_contig2bin.tsv",
+        tsv="results/{project}/output/contig2bins/{sample}/metacoag_contig2bin.tsv",
     threads: 12
     log:
         "logs/{project}/contig2bins/{sample}/postprocess_metacoag.log",
@@ -31,30 +30,14 @@ rule postprocess_metacoag:
         "../envs/unix.yaml"
     shell:
         "(awk '{{print $1 \"\t\" $NF}}' {input.c2bin} | "
-        "sed 's/len=[0-9]*,/metacoag_/g' > {output}) > {log} 2>&1"
-
-
-## tests if binner created bins and writes file for DAS Tool
-rule binner_control:
-    input:
-        get_all_contig2bin_files,
-    output:
-        temp("results/{project}/binning/das_tool/binner_control_{sample}.csv"),
-    params:
-        get_binners(),
-    log:
-        "logs/{project}/das_tool/{sample}/binner_control.log",
-    conda:
-        "../envs/unix.yaml"
-    script:
-        "../scripts/binner_control.py"
+        "sed 's/len=[0-9]*,/metacoag_/g' > {output.tsv}) > {log} 2>&1"
 
 
 rule dastool_run:
     input:
-        binc=rules.binner_control.output,
+        metacoag=rules.postprocess_metacoag.output.tsv,
+        metabat=rules.postprocess_metabat.output.tsv,
         contigs=get_assembly,
-        asml_folder=rules.megahit.output.outdir,
     output:
         summary=temp(
             "results/{project}/binning/das_tool/{sample}/{sample}_DASTool_summary.tsv"
@@ -67,22 +50,22 @@ rule dastool_run:
                 "results/{project}/binning/das_tool/{sample}/{sample}_DASTool_bins/"
             )
         ),
-        outdir=temp(directory("results/{project}/binning/das_tool/{sample}/")),
-        done=touch("results/{project}/binning/das_tool/{sample}_run.done"),
     params:
-        path_bin_list=get_paths_binner,
+        outdir=lambda wildcards, output: Path(output.bins).parent,
         threshold=0.001,
     threads: 64
+    resources:
+        heavy=2,
     log:
         "logs/{project}/das_tool/{sample}/das_tool_run.log",
     conda:
         "../envs/das_tool.yaml"
     shell:
         "DAS_Tool --debug --write_bins "
-        "-i {params.path_bin_list[0]} "
-        "-l {params.path_bin_list[1]} "
+        "-i {input.metabat},{input.metacoag} "
+        "-l metabat,metacoag "
         "-c {input.contigs} "
-        "-o {output.outdir}/{wildcards.sample} "
+        "-o {params.outdir}/{wildcards.sample} "
         "--score_threshold {params.threshold} "
         "--threads={threads} "
         "> {log} 2>&1 "
@@ -113,13 +96,14 @@ if bins_for_sample:
         output:
             bins=directory("results/{project}/output/fastas/{sample}/bins/"),
             done=touch("results/{project}/binning/das_tool/{sample}_bins.done"),
-        threads: 64
+        threads: 10
+        priority: 1
         log:
             "logs/{project}/bins/{sample}/gz_bins.log",
         conda:
             "../envs/unix.yaml"
         shell:
-            "(pigz -k {input.bins}/*.fa && "
+            "(gzip -k {input.bins}/*.fa && "
             "mkdir -p {output.bins}/ && "
             "mv {input.bins}/*.fa.gz {output.bins}/ ) > {log} 2>&1"
 
@@ -136,14 +120,3 @@ if bins_for_sample:
             "../envs/python.yaml"
         script:
             "../scripts/move_MAGs.py"
-
-    rule cleanup_dastool_output:
-        input:
-            folder=rules.dastool_run.output.outdir,
-            bins=rules.gzip_bins.output.done,
-            move=rules.move_dastool_output.output.done,
-        output:
-            done=touch("results/{project}/binning/das_tool/{sample}_cleanup.done"),
-        threads: 2
-        log:
-            "logs/{project}/das_tool/{sample}/cleanup.log",
