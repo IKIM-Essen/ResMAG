@@ -50,6 +50,10 @@ The GTDB needs to be downloaded and decompressed, it requires about 140 Gb.
 4. After successful step 3: the archive can be removed
 5. Please specify the path to your decompressed GTDB in the config file (see [Configuring workflow](#configuring-the-workflow))
 
+### Create UniCARD database
+Please follow the steps outlined in the [UniCARD repository](https://github.com/IKIM-Essen/uniCARD) to create a UniCARD database for resistance gene annotation.
+And specify the path to your database in the config file (see [Configuring workflow](#configuring-the-workflow))
+
 ---
 
 ## Usage
@@ -65,7 +69,8 @@ git clone https://github.com/IKIM-Essen/metagenomics_res.git
    - Specify filtering options for human reads (`human-filtering`)
    - Specify host filtering options, if you have a non-human host (`host-filtering`)
    - Specify options for different databases:
-     - GTDB database needs to be downloaded before (see [Download GTDB](#Download-GTDB))
+     - GTDB database needs to be downloaded before (see [Download GTDB](#download-gtdb))
+     - UniCARD database needs to be create before (see [Create UniCARD database](#create-unicard-database))
      - other databases (kaiju, CheckM2, CARD, genomad) can be given as a local path or downloaded when running the pipeline
 2. Provide sample information in the `config/pep/samples.csv` file while keeping the header and the format as:
 

@@ -108,8 +108,7 @@ rule uniCARD_run:
     resources:
         heavy=1,
     params:
-        db_wo_ext=get_uniCARD_db_wo_ext(),
-        #db_wo_ext=lambda w, input: os.path.splitext(input.dmdb)[0],
+        db_wo_ext=lambda w, input: os.path.splitext(input.dmdb)[0],
         max_targets=15,
     shell:
         "diamond blastp -q {input.faa} -d {params.db_wo_ext} "
