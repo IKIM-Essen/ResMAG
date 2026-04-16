@@ -1,5 +1,5 @@
 # if there is no local database version to use, it is downloaded
-if not config["kaiju"]["use-local"]:
+if not config["kaiju"]["use-shared"]:
 
     rule download_kaiju:
         output:
@@ -23,9 +23,7 @@ rule run_kaiju_reads:
         db_files=get_kaiju_files(),
         fastqs=get_filtered_gz_fastqs,
     output:
-        report=temp(
-            "results/{project}/output/classification/reads/{sample}/kaiju.out"
-        ),
+        report=temp("results/{project}/output/classification/reads/{sample}/kaiju.out"),
     params:
         evalue=0.00001,
     threads: 64

@@ -1,5 +1,5 @@
 # Resistance analysis
-if not config["card"]["use-local"]:
+if not config["card"]["use-shared"]:
 
     rule download_CARD_data:
         output:
@@ -71,32 +71,28 @@ rule CARD_read_run:
         "--clean -n {threads} > {log} 2>&1"
 
 
-"""
-if is_uniCARD_fasta:
-
-    rule uniCARD_makeDB:
-        input:
-            db=get_uniCARD_db(),
-        output:
-            dmdb=get_unicard_dmnd(),
-        log:
-            "logs/unicard_makeDB.log",
-        conda:
-            "../envs/diamond.yaml"
-        threads: 60
-        params:
-            filename=lambda wildcards, input: Path(input.db).name,
-            filename_wo_ext=Path(get_uniCARD_db_wo_ext()).name,
-            folder=lambda wildcards, input: Path(input.db).parent,
-        shell:
-            "(cd {params.folder} && diamond makedb --in {params.filename} -d {params.filename_wo_ext}) > {log} 2>&1"
-"""
+rule uniCARD_makeDB:
+    input:
+        db=get_uniCARD_db(),
+    output:
+        dmdb=get_unicard_dmnd(),
+    log:
+        "logs/unicard_makeDB.log",
+    conda:
+        "../envs/diamond.yaml"
+    threads: 60
+    params:
+        filename=lambda wildcards, input: Path(input.db).name,
+        filename_wo_ext=Path(get_uniCARD_db_wo_ext()).name,
+        folder=lambda wildcards, input: Path(input.db).parent,
+    shell:
+        "(cd {params.folder} && diamond makedb --in {params.filename} -d {params.filename_wo_ext}) > {log} 2>&1"
 
 
 rule uniCARD_run:
     input:
         faa=get_proteins,
-        dmdb=get_uniCARD_db(),
+        dmdb=get_unicard_dmnd(),
     output:
         tsv=temp(
             "results/{project}/output/resistance/uniCARD/assembly/{sample}_out.tsv"
@@ -113,6 +109,7 @@ rule uniCARD_run:
         heavy=1,
     params:
         db_wo_ext=get_uniCARD_db_wo_ext(),
+        #db_wo_ext=lambda w, input: os.path.splitext(input.dmdb)[0],
         max_targets=15,
     shell:
         "diamond blastp -q {input.faa} -d {params.db_wo_ext} "

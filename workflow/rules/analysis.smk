@@ -37,7 +37,7 @@ rule gzip_proteins:
 
 # Plasmid analysis
 
-if not config["genomad"]["use-local"]:
+if not config["genomad"]["use-shared"]:
 
     rule load_genomad_DB:
         output:

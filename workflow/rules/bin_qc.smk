@@ -1,15 +1,15 @@
 ## bin QC
-if not config["checkm2"]["use-local"]:
+if not config["checkm2"]["use-shared"]:
 
     rule checkm2_DB_download:
         output:
             dbfile=get_checkm2_db(),
-        params:
-            direct=lambda wildcards, output: Path(output.dbfile).parent.parent,
         log:
             "logs/checkm2_DB_download.log",
         conda:
             "../envs/checkm2.yaml"
+        params:
+            direct=lambda wildcards, output: Path(output.dbfile).parent.parent,
         shell:
             "checkm2 database --download --path {params.direct} > {log} 2>&1"
 
@@ -20,13 +20,13 @@ rule checkm2_run:
         dbfile=get_checkm2_db(),
     output:
         stats="results/{project}/output/report/{sample}/checkm2_quality_report.tsv",
-    params:
-        outdir="results/{project}/qc/checkm2/{sample}/",
     log:
         "logs/{project}/checkm2/{sample}.log",
-    threads: 24
     conda:
         "../envs/checkm2.yaml"
+    threads: 24
+    params:
+        outdir="results/{project}/qc/checkm2/{sample}/",
     shell:
         "(checkm2 predict -x fa.gz --threads {threads} --force "
         "--input {input.bins}/ --output-directory {params.outdir}/ "
@@ -43,14 +43,14 @@ rule bin_summary_sample:
         csv_bins="results/{project}/output/report/{sample}/{sample}_bin_summary.csv",
         csv_tax="results/{project}/output/report/{sample}/{sample}_bin_taxonomy.csv",
         csv_mags="results/{project}/output/report/{sample}/{sample}_mags_summary.csv",
+    log:
+        "logs/{project}/bin_summary/{sample}.log",
+    conda:
+        "../envs/python.yaml"
+    threads: 4
     params:
         max_cont=config["MAG-criteria"]["max-contamination"],
         min_comp=config["MAG-criteria"]["min-completeness"],
-    log:
-        "logs/{project}/bin_summary/{sample}.log",
-    threads: 4
-    conda:
-        "../envs/python.yaml"
     script:
         "../scripts/bin_summary_sample.py"
 
@@ -68,14 +68,14 @@ use rule qc_summary_report as bin_sample_report with:
                 labels={"sample": "{sample}"},
             )
         ),
+    log:
+        "logs/{project}/report/{sample}/bin_rbt_csv.log",
     params:
         pin_until="bin",
         styles="resources/report/tables/",
         name="{sample}_bin_summary",
         header="Bin summary for sample {sample}",
         pattern=config["tablular-config"],
-    log:
-        "logs/{project}/report/{sample}/bin_rbt_csv.log",
 
 
 use rule qc_summary_report as taxonomy_report with:
@@ -91,14 +91,14 @@ use rule qc_summary_report as taxonomy_report with:
                 labels={"sample": "{sample}"},
             )
         ),
+    log:
+        "logs/{project}/report/{sample}/taxonomy_rbt_csv.log",
     params:
         pin_until="bin",
         styles="resources/report/tables/",
         name="{sample}_taxonomy_summary",
         header="Taxonomy summary for sample {sample}",
         pattern=config["tablular-config"],
-    log:
-        "logs/{project}/report/{sample}/taxonomy_rbt_csv.log",
 
 
 use rule qc_summary_report as mag_report with:
@@ -114,11 +114,11 @@ use rule qc_summary_report as mag_report with:
                 labels={"sample": "{sample}"},
             )
         ),
+    log:
+        "logs/{project}/report/{sample}/mag_rbt_csv.log",
     params:
         pin_until="MAG",
         styles="resources/report/tables/",
         name="{sample}_MAG_summary",
         header="MAG summary for sample {sample}",
         pattern=config["tablular-config"],
-    log:
-        "logs/{project}/report/{sample}/mag_rbt_csv.log",

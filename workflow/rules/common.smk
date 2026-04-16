@@ -98,7 +98,7 @@ def get_human_ref_download():
 
 
 def get_human_ref():
-    if config["human-filtering"]["use-local"]:
+    if config["human-filtering"]["use-shared"]:
         path = config["human-filtering"]["local-path"]
         return path
     else:
@@ -164,33 +164,15 @@ def get_CARD_hierarchy():
 
 
 def get_uniCARD_db_wo_ext():
-    db_wo_ext = str(Path(get_uniCARD_db()).with_suffix(""))
-    return db_wo_ext
-
-
-"""
-def is_uniCARD_fasta():
-    filename = str(Path(get_uniCARD_db()).name)
-    ext = "".join(Path(filename).suffixes)
-    if ext in ["fasta", "fasta.gz"]:
-        return True
-    else:
-        return False
-
-
-def get_uniCARD_db_wo_ext():
-    db_wo_ext = str(Path(get_uniCARD_db()).with_suffix(""))
-    if is_uniCARD_fasta():
-        db_wo_ext = db_wo_ext.with_suffix("")
+    db_wo_ext = str(Path(get_uniCARD_db()).with_suffix("").with_suffix(""))
     return db_wo_ext
 
 
 def get_unicard_dmnd():
-    if is_uniCARD_fasta():
-        return "".join([get_uniCARD_db_wo_ext(), ".dmnd"])
-    else:
-        return get_uniCARD_db()
+    return "".join([get_uniCARD_db_wo_ext(), ".dmnd"])
 
+
+"""
 
 def get_mag_fa(wildcards):
     folder = "results/{}/output/fastas/{}/mags/".format(

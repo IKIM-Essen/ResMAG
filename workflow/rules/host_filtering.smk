@@ -1,20 +1,20 @@
 from pathlib import Path
 
 # Download human reference genome if not local file is given
-if not config["human-filtering"]["use-local"]:
+if not config["human-filtering"]["use-shared"]:
 
     rule download_human_ref:
         output:
             fasta=get_human_ref(),
-        params:
-            download=get_human_ref_download(),
-            folder=lambda wildcards, output: Path(output.fasta).parent,
         log:
             "logs/human_ref_download.log",
         group:
             "refGenome_depended"
         conda:
             "../envs/unix.yaml"
+        params:
+            download=get_human_ref_download(),
+            folder=lambda wildcards, output: Path(output.fasta).parent,
         shell:
             "(mkdir -p {params.folder} && "
             "cd {params.folder} && "
@@ -27,11 +27,11 @@ rule map_to_human:
         ref=get_human_ref(),
     output:
         bam=temp("results/{project}/human_filtering/alignments/{sample}.bam"),
-    threads: 64
     log:
         "logs/{project}/human_filtering/map_to_human_{sample}.log",
     conda:
         "../envs/minimap2.yaml"
+    threads: 64
     shell:
         "(minimap2 -a -xsr -t {threads} {input.ref} {input.fastqs} | "
         "samtools view -bh | "
@@ -43,11 +43,11 @@ rule index_human_alignment:
         rules.map_to_human.output.bam,
     output:
         bai=temp("results/{project}/human_filtering/alignments/{sample}.bam.bai"),
-    threads: 20
     log:
         "logs/{project}/human_filtering/index_human_alignment_{sample}.log",
     conda:
         "../envs/minimap2.yaml"
+    threads: 20
     shell:
         "samtools index {input} > {log} 2>&1"
 
@@ -63,11 +63,11 @@ rule filter_human:
                 read=["R1", "R2"],
             )
         ),
-    threads: 64
     log:
         "results/{project}/output/report/prerequisites/qc/{sample}_filter_human.log",
     conda:
         "../envs/minimap2.yaml"
+    threads: 64
     shell:
         "(samtools fastq --threads {threads} -F 3584 -f 77 "
         "-o {output.filtered[0]} {input.bam} && "
@@ -82,10 +82,10 @@ rule gzip_filtered_reads:
         "results/{project}/output/filtered_reads/{sample}_{read}.fastq.gz",
     log:
         "logs/{project}/human_filtering/gzip_{sample}_{read}.log",
-    threads: 20
     priority: 1
     conda:
         "../envs/unix.yaml"
+    threads: 20
     shell:
         "gzip -k {input} > {log} 2>&1"
 
@@ -100,18 +100,18 @@ if config["host-filtering"]["do-host-filtering"]:
             ref=get_host_ref(),
         output:
             bam=temp("results/{project}/host_filtering/alignments/{sample}.bam"),
-        threads: 20
         log:
             "logs/{project}/host_filtering/map_to_host_{sample}.log",
+        threads: 20
 
     use rule index_human_alignment as index_host_alignment with:
         input:
             rules.map_to_host.output.bam,
         output:
             bai=temp("results/{project}/host_filtering/alignments/{sample}.bam.bai"),
-        threads: 3
         log:
             "logs/{project}/host_filtering/index_host_alignment_{sample}.log",
+        threads: 3
 
     rule filter_host:
         input:
@@ -124,11 +124,11 @@ if config["host-filtering"]["do-host-filtering"]:
                     read=["R1", "R2"],
                 )
             ),
-        threads: 64
         log:
             "results/{project}/output/report/prerequisites/qc/{sample}_filter_host.log",
         conda:
             "../envs/minimap2.yaml"
+        threads: 64
         shell:
             "(samtools fastq -F 3584 -f 77 {input.bam} | "
             "gzip -c > {output.filtered[0]} && "

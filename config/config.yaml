@@ -15,11 +15,11 @@ adapter-seqs: "-a CTGTCTCTTATACACATCT -g AGATGTGTATAAGAGACAG"
 # reads are always filtered for human contamination
 human-filtering:
   # if you have a human reference genome on your device,
-  # you can set use-local to True and specify the path to the human reference genome
-  use-local: True
+  # you can set use-shared to True and specify the path to the human reference genome
+  use-shared: True
   # path to a locally stored human reference genome
   local-path: /groups/ds/databases_refGenomes/refGenomes/latest/human/GRCh38_latest_genomic.fna.gz
-  # if use-local = False the reference genome is downloaded via the following url
+  # if use-shared = False the reference genome is downloaded via the following url
   download-path: https://ftp.ncbi.nlm.nih.gov/refseq/H_sapiens/annotation/GRCh38_latest/refseq_identifiers/GRCh38_latest_genomic.fna.gz
 
 # if filtering for non-human host is required,
@@ -44,33 +44,33 @@ MAG-criteria:
 gtdb: /groups/ds/databases_refGenomes/databases/latest/gtdb/release226/
 
 kaiju:
-  use-local: True
+  use-shared: True
   # path of kaiju DB .fmi file
-  # if use-local False: DB is downloaded and saved to this path
+  # if use-shared False: DB is downloaded and saved to this path
   fmi-file: /groups/ds/databases_refGenomes/databases/latest/kaiju/refseq_nr/unpacked_2024-08-13/kaiju_db_refseq_nr.fmi
   download: https://kaiju-idx.s3.eu-central-1.amazonaws.com/2024/kaiju_db_refseq_nr_2024-08-13.tgz
 
 checkm2:
-  use-local: True
-  #if use-local False a folder named CheckM2_database will be created under the given path
+  use-shared: True
+  #if use-shared False a folder named CheckM2_database will be created under the given path
   db-folder: /groups/ds/databases_refGenomes/databases/latest/checkM2/
 
 # folder of genomad DB
 genomad:
-  use-local: True
+  use-shared: True
   # a folder named genomad_db is expected under the given path
-  # if use-local False this folder will be created
+  # if use-shared False this folder will be created
   db-folder: /groups/ds/databases_refGenomes/databases/latest/
 
 card:
-  use-local: True
+  use-shared: True
   db-file: /groups/ds/databases_refGenomes/databases/latest/card/card.json
   version: v4.0.1
   url: https://card.mcmaster.ca/latest/data
 
 uniCARD:
-  #path to the .dmnd file of UniCARD database
-  db-file: /groups/ds/databases_refGenomes/databases/latest/uniCARD/uniCARD.dmnd
+  #path to the fasta.gz file of UniCARD database
+  db-file: /groups/ds/databases_refGenomes/databases/latest/uniCARD/uniCARD.fasta.gz
   # path to CARDs hierarchy file
   hierarchy-json: /groups/ds/databases_refGenomes/databases/latest/uniCARD/CARD_hierarchy_v4.0.0.json
 
