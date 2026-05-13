@@ -93,4 +93,4 @@ rule move_genomad_output:
         outdir=lambda wildcards, output: Path(output.plasmid_tsv).parent,
         sum_folder=lambda wildcards, input: Path(input.plasmid_tsv).parent,
     shell:
-        "scp {params.sum_folder}/*.tsv {params.sum_folder}/*.json {params.outdir}/ > {log} 2>&1"
+        "cp {params.sum_folder}/*.tsv {params.sum_folder}/*.json {params.outdir}/ > {log} 2>&1"

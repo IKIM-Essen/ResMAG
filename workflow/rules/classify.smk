@@ -175,25 +175,10 @@ rule contig_classification:
         "../scripts/contig_classification.py"
 
 
-rule prepare_gtdb:
-    output:
-        done=temp(touch("results/GTDB_prep.done")),
-    params:
-        db_folder=get_gtdb_folder(),
-    threads: 1
-    log:
-        "logs/GTDB_prep.log",
-    conda:
-        "../envs/gtdbtk.yaml"
-    shell:
-        "(conda env config vars set "
-        "GTDBTK_DATA_PATH='{params.db_folder}') > {log} 2>&1"
-
-
 rule gtdbtk_classify_wf:
     input:
         bins=rules.gzip_bins.output.bins,
-        db_prep=rules.prepare_gtdb.output.done,
+        #db_prep=rules.prepare_gtdb.output.done,
     output:
         json="results/{project}/output/classification/bins/{sample}/gtdbtk.json",
         outdir=temp(
@@ -202,6 +187,7 @@ rule gtdbtk_classify_wf:
     params:
         clf_outdir=lambda wildcards, output: Path(output.json).parent,
         json=lambda wildcards, output: Path(output.json).name,
+        db_folder=get_gtdb_folder(),
     threads: 40
     # to ensure only one of these commands are run at the same time
     resources:
@@ -211,10 +197,21 @@ rule gtdbtk_classify_wf:
     conda:
         "../envs/gtdbtk.yaml"
     shell:
-        "(gtdbtk classify_wf --prefix {wildcards.sample} -x fa.gz "
-        "--cpus {threads} --pplacer_cpus {threads} "
-        "--genome_dir {input.bins}/ --out_dir {output.outdir}/ && "
-        "cp {output.outdir}/{params.json} {params.clf_outdir}/) > {log} 2>&1"
+        r"""
+        (
+            export GTDBTK_DATA_PATH="{params.db_folder}" &&
+
+            gtdbtk classify_wf \
+                --prefix {wildcards.sample} \
+                -x fa.gz \
+                --cpus {threads} \
+                --pplacer_cpus {threads} \
+                --genome_dir {input.bins}/ \
+                --out_dir {output.outdir}/ &&
+            
+            cp {output.outdir}/{params.json} {params.clf_outdir}/
+        ) > {log} 2>&1
+        """
 
 
 # combines bacterial and archaeal

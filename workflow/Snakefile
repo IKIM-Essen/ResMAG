@@ -7,6 +7,7 @@ from snakemake.utils import min_version
 
 min_version("9.0.0")
 
+containerized: "containerization/my_container.sif"
 
 configfile: "config/config.yaml"
 
@@ -28,11 +29,41 @@ include: "rules/bin_qc.smk"
 include: "rules/classify.smk"
 include: "rules/analysis.smk"
 include: "rules/resistance.smk"
-include: "rules/report.smk"
+#include: "rules/report.smk"
 
+report_input = list()
+if config["host-filtering"]["do-host-filtering"]:
+    report_input.append("results/{project}/output/report/host_filtering/")
 
 rule all:
     input:
+        report_input,
+        expand("results/{project}/output/report/all/multiqc_{project}.html",project=get_project()),
+        # 2. Species diversity
+        expand("results/{project}/output/report/all/quality_summary/",project=get_project()),
+        # 3. Assembly results
+        expand("results/{project}/output/report/all/assembly/",project=get_project()),
+        expand(
+            "results/{project}/output/report/{sample}/bin/",
+            project=get_project(),sample=get_samples(),
+        ),
+        expand(
+            "results/{project}/output/report/{sample}/taxonomy/",
+            project=get_project(),sample=get_samples(),
+        ),
+        # 5. Taxonomic classification
+        expand(
+            "results/{project}/output/report/{sample}/mags/",
+            project=get_project(),sample=get_samples(),
+        ),
+        expand(
+            "results/{project}/output/report/{sample}/{sample}_reads_kaiju.out.html",
+            project=get_project(),sample=get_samples(),
+        ),
+        expand(
+            "results/{project}/output/report/{sample}/{sample}_contigs_kaiju.out.html",
+            project=get_project(),sample=get_samples(),
+        ),
         # read classification output
         expand(
             "results/{project}/output/classification/reads/{sample}/{sample}_{level}_abundance.tsv",
@@ -63,11 +94,6 @@ rule all:
             project=get_project(),
             sample=get_samples(),
         ),
-        # overall report
-        expand(
-            "results/{project}/output/report/report_{project}.zip",
-            project=get_project(),
-        ),
         # resistance analysis
         expand(
             "results/{project}/output/resistance/CARD/reads/{sample}/{sample}.gene_mapping_data.txt",
@@ -84,3 +110,9 @@ rule all:
             project=get_project(),
             sample=get_samples(),
         ),
+
+'''# overall report
+        expand(
+            "results/{project}/output/report/report_{project}.zip",
+            project=get_project(),
+        ),'''
