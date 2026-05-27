@@ -120,3 +120,28 @@ if bins_for_sample:
             "../envs/python.yaml"
         script:
             "../scripts/move_MAGs.py"
+
+
+    rule cleanup_dastool:
+        input:
+            # dependency only
+            summary_moved=rules.move_dastool_output.output.summary,
+            mags_moved=rules.move_MAGs.output.outdir,
+            # actually delete these
+            to_delete=[
+                rules.dastool_run.output.contig2bin,
+                rules.dastool_run.output.summary,
+                rules.dastool_run.output.bins,
+                rules.metabat.output.outdir,
+                rules.metacoag_run.output.out_tsv,
+            ]
+        output:
+            touch("results/{project}/cleanup/{sample}_dastool.done"),
+        log:
+            "logs/{project}/cleanup_dastool/{sample}.log",
+        conda:
+            "../envs/unix.yaml"
+        threads: 1
+        priority: 1
+        script:
+            "../scripts/cleanup_files.py"

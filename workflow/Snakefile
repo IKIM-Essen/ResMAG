@@ -35,6 +35,7 @@ report_input = list()
 if config["host-filtering"]["do-host-filtering"]:
     report_input.append("results/{project}/output/report/host_filtering/")
 
+
 rule all:
     input:
         report_input,
@@ -110,6 +111,58 @@ rule all:
             project=get_project(),
             sample=get_samples(),
         ),
+        #cleanup
+        expand(
+            "results/{project}/cleanup/{sample}_fastp.done",
+            project=get_project(),
+            sample=get_samples(),
+        ),
+        expand(
+            "results/{project}/cleanup/{sample}_fastq.done",
+            project=get_project(),
+            sample=get_samples(),
+        ),
+        expand(
+            "results/{project}/cleanup/{sample}_human_map.done",
+            project=get_project(),
+            sample=get_samples(),
+        ),
+        expand(
+            "results/{project}/cleanup/{sample}_kaiju_reads.done",
+            project=get_project(),
+            sample=get_samples(),
+        ),
+        expand(
+            "results/{project}/cleanup/{sample}_kaiju_contigs.done",
+            project=get_project(),
+            sample=get_samples(),
+        ),
+        expand(
+            "results/{project}/cleanup/{sample}_gtdb.done",
+            project=get_project(),
+            sample=get_samples(),
+        ),
+        expand(
+            "results/{project}/cleanup/{sample}_unicard.done",
+            project=get_project(),
+            sample=get_samples(),
+        ),
+        expand(
+            "results/{project}/cleanup/{sample}_assembly.done",
+            project=get_project(),
+            sample=get_samples(),
+        ),
+        expand(
+            "results/{project}/cleanup/{sample}_proteins.done",
+            project=get_project(),
+            sample=get_samples(),
+        ),
+        expand(
+            "results/{project}/cleanup/{sample}_dastool.done",
+            project=get_project(),
+            sample=get_samples(),
+        ),
+
 
 '''# overall report
         expand(

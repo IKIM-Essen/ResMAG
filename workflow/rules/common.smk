@@ -53,13 +53,6 @@ def get_host_map_statistics(wildcards):
         return []
 
 
-def get_filtered_fastqs(wildcards):
-    return [
-        "results/{project}/output/filtered_reads/{sample}_R1.fastq",
-        "results/{project}/output/filtered_reads/{sample}_R2.fastq",
-    ]
-
-
 def get_filtered_gz_fastqs(wildcards):
     return [
         "results/{project}/output/filtered_reads/{sample}_R1.fastq.gz",

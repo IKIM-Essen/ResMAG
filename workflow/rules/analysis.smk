@@ -35,6 +35,30 @@ rule gzip_proteins:
         "gzip {input.faa} {input.fna} {input.gff} > {log} 2>&1"
 
 
+rule cleanup_proteins:
+    input:
+        # dependency only
+        gz_faa=rules.gzip_proteins.output.faa,
+        gz_fna=rules.gzip_proteins.output.fna,
+        gz_gff=rules.gzip_proteins.output.gff,
+        # actually delete these
+        to_delete=[
+            rules.gene_identification.output.faa,
+            rules.gene_identification.output.fna,
+            rules.gene_identification.output.gff,
+        ]
+    output:
+        touch("results/{project}/cleanup/{sample}_proteins.done"),
+    log:
+        "logs/{project}/cleanup_proteins/{sample}.log",
+    conda:
+        "../envs/unix.yaml"
+    threads: 1
+    priority: 1
+    script:
+        "../scripts/cleanup_files.py"
+
+
 # Plasmid analysis
 
 if not config["genomad"]["use-shared"]:
