@@ -15,10 +15,10 @@ def get_samples():
 def get_fastqs(wildcards):
     file_r1 = pep.sample_table.loc[wildcards.sample]["fq1"]
     file_r2 = pep.sample_table.loc[wildcards.sample]["fq2"]
-    return (
+    return [
         file_r1,
         file_r2,
-    )
+    ]
 
 
 def get_adapters(wildcards):
