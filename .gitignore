@@ -10,6 +10,8 @@
 !config/pep
 !config/pep/config.yaml
 !config/pep/samples.csv
+!config/profile
+!config/profile/config.yaml
 !workflow
 !workflow/*
 !workflow/envs/*
@@ -19,6 +21,8 @@
 !resources
 !resources/*
 !resources/report/**
+!slurm/
+!slurm/job.sh
 !.gitignore
 !.snakemake-workflow-catalog.yml
 !LICENSE
