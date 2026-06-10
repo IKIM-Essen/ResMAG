@@ -22,15 +22,6 @@ human-filtering:
   # if use-shared = False the reference genome is downloaded via the following url
   download-path: https://ftp.ncbi.nlm.nih.gov/refseq/H_sapiens/annotation/GRCh38_latest/refseq_identifiers/GRCh38_latest_genomic.fna.gz
 
-# if filtering for non-human host is required,
-# specify a host name and the path to the reference genome
-host-filtering:
-  do-host-filtering: False
-  #e.g.: pig
-  host-name:
-  #e.g.: resources/ref_genome/GCF_000003025.6_Sscrofa11.1_genomic.fa.gz
-  ref-genome:
-
 # minimum contig length used during assembly step
 min-contig-length: 300
 

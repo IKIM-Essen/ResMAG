@@ -7,7 +7,7 @@ from snakemake.utils import min_version
 
 min_version("9.0.0")
 
-containerized: "containerization/my_container.sif"
+#containerized: "containerization/my_container.sif"
 
 configfile: "config/config.yaml"
 
@@ -29,39 +29,28 @@ include: "rules/bin_qc.smk"
 include: "rules/classify.smk"
 include: "rules/analysis.smk"
 include: "rules/resistance.smk"
-#include: "rules/report.smk"
 
-report_input = list()
-if config["host-filtering"]["do-host-filtering"]:
-    report_input.append("results/{project}/output/report/host_filtering/")
 
 rule all:
     input:
-        report_input,
-        expand("results/{project}/output/report/all/multiqc_{project}.html",project=get_project()),
+        expand("results/{project}/output/report/multiqc_{project}.html",project=get_project()),
         # 2. Species diversity
-        expand("results/{project}/output/report/all/quality_summary/",project=get_project()),
+        expand("results/{project}/output/report/{sample}/{sample}_quality_summary.csv",project=get_project(),sample=get_samples(),),
         # 3. Assembly results
-        expand("results/{project}/output/report/all/assembly/",project=get_project()),
-        expand(
-            "results/{project}/output/report/{sample}/bin/",
-            project=get_project(),sample=get_samples(),
-        ),
-        expand(
-            "results/{project}/output/report/{sample}/taxonomy/",
-            project=get_project(),sample=get_samples(),
-        ),
+        expand("results/{project}/output/report/{sample}/{sample}_assembly_summary.csv",project=get_project(),sample=get_samples(),),
         # 5. Taxonomic classification
-        expand(
-            "results/{project}/output/report/{sample}/mags/",
+        expand("results/{project}/output/report/{sample}/{sample}_bin_summary.csv",
+            project=get_project(),sample=get_samples(),
+        ),
+        expand("results/{project}/output/report/{sample}/{sample}_mags_summary.csv",
             project=get_project(),sample=get_samples(),
         ),
         expand(
-            "results/{project}/output/report/{sample}/{sample}_reads_kaiju.out.html",
+            "results/{project}/output/report/{sample}/{sample}_kaiju_krona_reads.html",
             project=get_project(),sample=get_samples(),
         ),
         expand(
-            "results/{project}/output/report/{sample}/{sample}_contigs_kaiju.out.html",
+            "results/{project}/output/report/{sample}/{sample}_kaiju_krona_contigs.html",
             project=get_project(),sample=get_samples(),
         ),
         # read classification output
@@ -101,8 +90,8 @@ rule all:
             sample=get_samples(),
         ),
         expand(
-            "results/{project}/output/resistance/uniCARD/{project}_drug_class_abundance_all_possible.csv",
-            project=get_project(),
+            "results/{project}/output/resistance/uniCARD/per_sample_resistance_abundance/{sample}_drug_class_abundance.csv",
+            project=get_project(),sample=get_samples(),
         ),
         #contig classification
         expand(
@@ -110,9 +99,3 @@ rule all:
             project=get_project(),
             sample=get_samples(),
         ),
-
-'''# overall report
-        expand(
-            "results/{project}/output/report/report_{project}.zip",
-            project=get_project(),
-        ),'''

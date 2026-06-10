@@ -41,7 +41,6 @@ rule bin_summary_sample:
         gtdb="results/{project}/output/classification/bins/{sample}/{sample}.summary.tsv",
     output:
         csv_bins="results/{project}/output/report/{sample}/{sample}_bin_summary.csv",
-        csv_tax="results/{project}/output/report/{sample}/{sample}_bin_taxonomy.csv",
         csv_mags="results/{project}/output/report/{sample}/{sample}_mags_summary.csv",
     log:
         "logs/{project}/bin_summary/{sample}.log",
@@ -53,72 +52,3 @@ rule bin_summary_sample:
         min_comp=config["MAG-criteria"]["min-completeness"],
     script:
         "../scripts/bin_summary_sample.py"
-
-
-use rule qc_summary_report as bin_sample_report with:
-    input:
-        "results/{project}/output/report/{sample}/{sample}_bin_summary.csv",
-    output:
-        temp(
-            report(
-                directory("results/{project}/output/report/{sample}/bin/"),
-                htmlindex="index.html",
-                category="4. Binning results",
-                subcategory="4.1 Summary",
-                labels={"sample": "{sample}"},
-            )
-        ),
-    log:
-        "logs/{project}/report/{sample}/bin_rbt_csv.log",
-    params:
-        pin_until="bin",
-        styles="resources/report/tables/",
-        name="{sample}_bin_summary",
-        header="Bin summary for sample {sample}",
-        pattern=config["tablular-config"],
-
-
-use rule qc_summary_report as taxonomy_report with:
-    input:
-        "results/{project}/output/report/{sample}/{sample}_bin_taxonomy.csv",
-    output:
-        temp(
-            report(
-                directory("results/{project}/output/report/{sample}/taxonomy/"),
-                htmlindex="index.html",
-                category="4. Binning results",
-                subcategory="4.3 Taxonomy classification",
-                labels={"sample": "{sample}"},
-            )
-        ),
-    log:
-        "logs/{project}/report/{sample}/taxonomy_rbt_csv.log",
-    params:
-        pin_until="bin",
-        styles="resources/report/tables/",
-        name="{sample}_taxonomy_summary",
-        header="Taxonomy summary for sample {sample}",
-        pattern=config["tablular-config"],
-
-
-use rule qc_summary_report as mag_report with:
-    input:
-        "results/{project}/output/report/{sample}/{sample}_mags_summary.csv",
-    output:
-        temp(
-            report(
-                directory("results/{project}/output/report/{sample}/mags/"),
-                htmlindex="index.html",
-                category="5. Taxonomic classification",
-                subcategory="5.1 MAGs classification",
-                labels={"sample": "{sample}"},
-            )
-        ),
-    log:
-        "logs/{project}/report/{sample}/mag_rbt_csv.log",
-    params:
-        pin_until="MAG",
-        styles="resources/report/tables/",
-        name="{sample}_MAG_summary",
-        header="MAG summary for sample {sample}",
-        pattern=config["tablular-config"],

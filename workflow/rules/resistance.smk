@@ -29,7 +29,8 @@ rule CARD_load_DB_for_reads:
     conda:
         "../envs/card.yaml"
     shell:
-        "rgi clean --local && " "rgi load --card_json {input} --local > {log} 2>&1"
+        "rgi clean --local && "
+        "rgi load --card_json {input} --local > {log} 2>&1"
 
 
 rule CARD_annotation:
@@ -37,8 +38,7 @@ rule CARD_annotation:
         json=get_card_db_file(),
         load=rules.CARD_load_DB_for_reads.output,
     output:
-        done=temp(touch("results/CARD_annotation.done")),
-        ann=get_card_annotation_file(),
+        ann=temp(get_card_annotation_file()),
     log:
         "logs/CARD_annotation.log",
     conda:
@@ -156,6 +156,7 @@ rule resistance_abundance_per_sample:
     input:
         csv=rules.filter_uniCARD.output.csv,
         json=get_CARD_hierarchy(),
+        contig_file="results/{project}/output/classification/assembly/{sample}/{sample}_classified_contigs.csv",
     output:
         abd_class="results/{project}/output/resistance/uniCARD/per_sample_resistance_abundance/{sample}_drug_class_abundance.csv",
         abd_ARGs="results/{project}/output/resistance/uniCARD/per_sample_resistance_abundance/{sample}_ARGs_abundance.csv",
@@ -167,7 +168,7 @@ rule resistance_abundance_per_sample:
     script:
         "../scripts/uniCARD_abundance_sample.py"
 
-
+'''
 rule resistance_abundance_all:
     input:
         contig_files=expand(
@@ -194,7 +195,7 @@ rule resistance_abundance_all:
     threads: 5
     script:
         "../scripts/uniCARD_abundance.py"
-
+'''
 
 """
 # updates CARD database to use for contigs instead of reads

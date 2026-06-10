@@ -63,13 +63,7 @@ rule kaiju2krona_reads:
         krona=temp(
             "results/{project}/output/classification/reads/{sample}/kaiju.out.krona"
         ),
-        html=report(
-            "results/{project}/output/report/{sample}/{sample}_reads_kaiju.out.html",
-            htmlindex="index.html",
-            category="5. Taxonomic classification",
-            subcategory="5.2 Read classification",
-            labels={"sample": "{sample}"},
-        ),
+        html="results/{project}/output/report/{sample}/{sample}_kaiju_krona_reads.html",
     log:
         "logs/{project}/kaiju/{sample}_reads_2krona.log",
     conda:
@@ -133,13 +127,7 @@ use rule kaiju2krona_reads as kaiju2krona_contigs with:
         krona=temp(
             "results/{project}/output/classification/assembly/{sample}/kaiju.out.krona"
         ),
-        html=report(
-            "results/{project}/output/report/{sample}/{sample}_contigs_kaiju.out.html",
-            htmlindex="index.html",
-            category="5. Taxonomic classification",
-            subcategory="5.3 Contig classification",
-            labels={"sample": "{sample}"},
-        ),
+        html="results/{project}/output/report/{sample}/{sample}_kaiju_krona_contigs.html",
     log:
         "logs/{project}/contig_classification/{sample}_2krona.log",
 

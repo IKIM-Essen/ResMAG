@@ -12,7 +12,6 @@ in_gtdb = snakemake.input.gtdb
 ### csv
 csv_path_mags = snakemake.output.csv_mags
 csv_path_bins = snakemake.output.csv_bins
-csv_path_tax = snakemake.output.csv_tax
 
 ## params
 max_cont = snakemake.params.max_cont
@@ -79,23 +78,15 @@ gtdb_df.set_index("bin", inplace=True)
 cols = [
     "classification",
     "closest_genome_reference",
-    "closest_genome_reference_radius",
     "closest_genome_ani",
-    "closest_genome_af",
-    "classification_method",
 ]
 gtdb_red_df = gtdb_df[cols]
-
-save_csv_table(csv_path_tax, gtdb_red_df)
-
 
 bins_df = pd.concat(
     [
         tool_red_df,
         checkm_red_df,
-        gtdb_red_df[
-            ["classification", "closest_genome_reference", "closest_genome_ani"]
-        ],
+        gtdb_red_df,
     ],
     axis=1,
 )

@@ -6,6 +6,9 @@ sys.stderr = open(snakemake.log[0], "w")
 
 card_drugs = snakemake.input.json
 args_file = snakemake.input.csv
+contig_file = snakemake.input.contig_file
+sample_id = snakemake.wildcards.sample
+
 # abundance outfiles
 abd_class = snakemake.output.abd_class
 abd_ARGs = snakemake.output.abd_ARGs
@@ -32,6 +35,8 @@ all_antibiotics = pd.Series(
 all_aros = df_card["ARO_name"].unique()
 all_aros.sort()
 
+# read in contig classification
+classification_df = pd.read_csv(contig_file)
 
 ##Create classes and ARG names abundance files
 df_args = pd.read_csv(args_file)
@@ -59,7 +64,14 @@ agg_dict.update(
 class_abundance_df = df_args_for_classes.groupby("contig").agg(agg_dict).reset_index()
 # Write out abundance file
 class_abundance_df = class_abundance_df.rename(columns={"ARO_ID": "#ARGs"})
-class_abundance_df.to_csv(abd_class, index=False)
+
+merged_classes_df = classification_df.merge(
+    class_abundance_df, on="contig", how="inner"
+)
+merged_classes_df.insert(0, "sampleID", sample_id)
+
+merged_classes_df.to_csv(abd_class, index=False)
+
 
 df_args["present"] = 1
 
@@ -92,4 +104,7 @@ aro_columns = sorted([a for a in all_aros if a in names_abundance_df.columns])
 names_abundance_df = names_abundance_df[["contig", "#ARGs"] + aro_columns]
 
 # Write out abundance file
-names_abundance_df.to_csv(abd_ARGs, index=False)
+merged_names_df = classification_df.merge(names_abundance_df, on="contig", how="inner")
+merged_names_df.insert(0, "sampleID", sample_id)
+
+merged_names_df.to_csv(abd_ARGs, index=False)
