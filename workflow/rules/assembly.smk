@@ -96,12 +96,12 @@ rule assembly_summary:
         qc_csv=rules.qc_summary.output.csv,
         asbl="results/{project}/output/report/prerequisites/assembly/{sample}_megahit.log",
         mapped="results/{project}/output/report/prerequisites/assembly/{sample}_reads_mapped.txt",
-        csv_bins="results/{project}/output/report/{sample}/{sample}_bin_summary.csv",
-        csv_mags="results/{project}/output/report/{sample}/{sample}_mags_summary.csv",
+        csv_bins="results/{project}/output/report/{sample}/{sample}_summary_bins.csv",
+        csv_mags="results/{project}/output/report/{sample}/{sample}_summary_mags.csv",
     output:
-        csv="results/{project}/output/report/{sample}/{sample}_assembly_summary.csv",
+        csv="results/{project}/output/report/{sample}/{sample}_summary_assembly.csv",
     log:
-        "logs/{project}/report/{sample}_assembly_summary.log",
+        "logs/{project}/report/{sample}_summary_assembly.log",
     conda:
         "../envs/python.yaml"
     script:

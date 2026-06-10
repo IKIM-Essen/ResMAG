@@ -19,7 +19,7 @@ rule checkm2_run:
         bins="results/{project}/output/fastas/{sample}/bins/",
         dbfile=get_checkm2_db(),
     output:
-        stats="results/{project}/output/report/{sample}/checkm2_quality_report.tsv",
+        stats="results/{project}/output/report/prerequisites/binning/{sample}/checkm2_quality_report.tsv",
     log:
         "logs/{project}/checkm2/{sample}.log",
     conda:
@@ -36,12 +36,12 @@ rule checkm2_run:
 
 rule bin_summary_sample:
     input:
-        tool="results/{project}/output/report/{sample}/{sample}_DASTool_summary.tsv",
-        checkm="results/{project}/output/report/{sample}/checkm2_quality_report.tsv",
+        tool="results/{project}/output/report/prerequisites/binning/{sample}/{sample}_DASTool_summary.tsv",
+        checkm="results/{project}/output/report/prerequisites/binning/{sample}/checkm2_quality_report.tsv",
         gtdb="results/{project}/output/classification/bins/{sample}/{sample}.summary.tsv",
     output:
-        csv_bins="results/{project}/output/report/{sample}/{sample}_bin_summary.csv",
-        csv_mags="results/{project}/output/report/{sample}/{sample}_mags_summary.csv",
+        csv_bins="results/{project}/output/report/{sample}/{sample}_summary_bins.csv",
+        csv_mags="results/{project}/output/report/{sample}/{sample}_summary_mags.csv",
     log:
         "logs/{project}/bin_summary/{sample}.log",
     conda:
@@ -51,4 +51,4 @@ rule bin_summary_sample:
         max_cont=config["MAG-criteria"]["max-contamination"],
         min_comp=config["MAG-criteria"]["min-completeness"],
     script:
-        "../scripts/bin_summary_sample.py"
+        "../scripts/bin_summary.py"

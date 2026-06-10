@@ -35,16 +35,10 @@ rule all:
     input:
         expand("results/{project}/output/report/multiqc_{project}.html",project=get_project()),
         # 2. Species diversity
-        expand("results/{project}/output/report/{sample}/{sample}_quality_summary.csv",project=get_project(),sample=get_samples(),),
+        expand("results/{project}/output/report/{sample}/{sample}_summary_quality.csv",project=get_project(),sample=get_samples(),),
         # 3. Assembly results
-        expand("results/{project}/output/report/{sample}/{sample}_assembly_summary.csv",project=get_project(),sample=get_samples(),),
+        expand("results/{project}/output/report/{sample}/{sample}_summary_assembly.csv",project=get_project(),sample=get_samples(),),
         # 5. Taxonomic classification
-        expand("results/{project}/output/report/{sample}/{sample}_bin_summary.csv",
-            project=get_project(),sample=get_samples(),
-        ),
-        expand("results/{project}/output/report/{sample}/{sample}_mags_summary.csv",
-            project=get_project(),sample=get_samples(),
-        ),
         expand(
             "results/{project}/output/report/{sample}/{sample}_kaiju_krona_reads.html",
             project=get_project(),sample=get_samples(),
@@ -59,12 +53,6 @@ rule all:
             project=get_project(),
             sample=get_samples(),
             level=["species", "genus", "family", "order", "class", "phylum"],
-        ),
-        # binning summary output
-        expand(
-            "results/{project}/output/report/{sample}/{sample}_DASTool_summary.tsv",
-            project=get_project(),
-            sample=get_samples(),
         ),
         # fasta output
         expand(

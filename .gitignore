@@ -18,9 +18,6 @@
 !workflow/report/*
 !workflow/rules/*
 !workflow/scripts/*
-!resources
-!resources/*
-!resources/report/**
 !slurm/
 !slurm/job.sh
 !.gitignore

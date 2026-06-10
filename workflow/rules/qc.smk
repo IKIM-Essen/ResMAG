@@ -77,7 +77,7 @@ rule qc_summary:
         json=rules.fastp.output.json,#"results/{project}/output/report/prerequisites/qc/{sample}.fastp.json",
         human_log="results/{project}/output/report/prerequisites/qc/{sample}_filter_human.log",
     output:
-        csv="results/{project}/output/report/{sample}/{sample}_quality_summary.csv",
+        csv="results/{project}/output/report/{sample}/{sample}_summary_quality.csv",
     log:
         "logs/{project}/report/{sample}_qc_summary.log",
     conda:
