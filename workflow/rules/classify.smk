@@ -74,6 +74,30 @@ rule kaiju2krona_reads:
         "ktImportText -o {output.html} {output.krona}) > {log} 2>&1"
 
 
+rule cleanup_kaiju_reads:
+    input:
+        # dependency only
+        tables=expand(
+            "results/{{project}}/output/classification/reads/{{sample}}/{{sample}}_{level}_abundance.tsv",
+            level=["species", "genus", "family", "order", "class", "phylum"],
+        ),
+        # actually delete these
+        to_delete=[
+            rules.run_kaiju_reads.output.report,
+            rules.kaiju2krona_reads.output.krona,
+        ]
+    output:
+        touch("results/{project}/cleanup/{sample}_kaiju_reads.done"),
+    log:
+        "logs/{project}/cleanup_kaiju/{sample}_reads.log",
+    conda:
+        "../envs/unix.yaml"
+    threads: 1
+    priority: 1
+    script:
+        "../scripts/cleanup_files.py"
+
+
 # classification of contigs
 rule run_kaiju_contigs:
     input:
@@ -163,6 +187,28 @@ rule contig_classification:
         "../scripts/contig_classification.py"
 
 
+rule cleanup_kaiju_contigs:
+    input:
+        # dependency only
+        classification=rules.contig_classification.output.csv,
+        gzip=rules.gzip_kaiju_contigs.output.report,
+        # actually delete these
+        to_delete=[
+            rules.run_kaiju_contigs.output.report,
+            rules.kaiju2krona_contigs.output.krona,
+        ]
+    output:
+        touch("results/{project}/cleanup/{sample}_kaiju_contigs.done"),
+    log:
+        "logs/{project}/cleanup_kaiju/{sample}_contigs.log",
+    conda:
+        "../envs/unix.yaml"
+    threads: 1
+    priority: 1
+    script:
+        "../scripts/cleanup_files.py"
+
+
 rule gtdbtk_classify_wf:
     input:
         bins=rules.gzip_bins.output.bins,
@@ -220,6 +266,26 @@ rule gtdb_summary:
         "../scripts/gtdb_summary.py"
 
 
+rule cleanup_gtdb:
+    input:
+        # dependency only
+        classification=rules.gtdb_summary.output.summary,
+        # actually delete these
+        to_delete=[
+            rules.gtdbtk_classify_wf.output.outdir,
+        ]
+    output:
+        touch("results/{project}/cleanup/{sample}_gtdb.done"),
+    log:
+        "logs/{project}/cleanup_gtdb/{sample}.log",
+    conda:
+        "../envs/unix.yaml"
+    threads: 1
+    priority: 1
+    script:
+        "../scripts/cleanup_files.py"
+        
+        
 rule tax_abundance_ncbi:
     input:
         tsv="results/{project}/output/classification/{stage}/{sample}/{sample}_{level}_abundance.tsv",

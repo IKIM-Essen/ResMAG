@@ -65,7 +65,7 @@ rule reads_mapped_assembly:
         bam=rules.map_to_assembly.output.bam,
         bai=rules.index_assembly_alignment.output.bai,
     output:
-        bai="results/{project}/output/report/prerequisites/assembly/{sample}_reads_mapped.txt",
+        txt="results/{project}/output/report/prerequisites/assembly/{sample}_reads_mapped.txt",
     threads: 20
     log:
         "logs/{project}/assembly/{sample}_mapping_reads.log",
@@ -73,7 +73,7 @@ rule reads_mapped_assembly:
         "../envs/minimap2.yaml"
     shell:
         "samtools view -c -F 4 --threads {threads} "
-        "-o {output.bai} {input.bam} > {log} 2>&1"
+        "-o {output.txt} {input.bam} > {log} 2>&1"
 
 
 rule gzip_assembly:
@@ -89,6 +89,28 @@ rule gzip_assembly:
         "../envs/unix.yaml"
     shell:
         "gzip -c {input.contigs} > {output} 2> {log}"
+
+
+rule cleanup_assembly:
+    input:
+        # dependency only
+        txt=rules.reads_mapped_assembly.output.txt,
+
+        # actually delete these
+        to_delete=[
+            rules.map_to_assembly.output.bam,
+            rules.index_assembly_alignment.output.bai,
+        ] 
+    output:
+        touch("results/{project}/cleanup/{sample}_assembly.done"),
+    log:
+        "logs/{project}/cleanup_assembly/{sample}.log",
+    conda:
+        "../envs/unix.yaml"
+    threads: 1
+    priority: 1
+    script:
+        "../scripts/cleanup_files.py"
 
 
 rule assembly_summary:

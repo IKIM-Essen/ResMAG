@@ -170,6 +170,27 @@ rule resistance_abundance_per_sample:
         "../scripts/uniCARD_abundance.py"
 
 
+rule cleanup_unicard:
+    input:
+        # dependency only
+        abundance=rules.resistance_abundance_per_sample.output.abd_class,
+        # actually delete these
+        to_delete=[
+            rules.uniCARD_run.output.tsv,
+            rules.gz_uniCARD_tsv.output.tsv,
+        ]
+    output:
+        touch("results/{project}/cleanup/{sample}_unicard.done"),
+    log:
+        "logs/{project}/cleanup_unicard/{sample}.log",
+    conda:
+        "../envs/unix.yaml"
+    threads: 1
+    priority: 1
+    script:
+        "../scripts/cleanup_files.py"
+        
+
 """
 # updates CARD database to use for contigs instead of reads
 # read based classification must be finished before

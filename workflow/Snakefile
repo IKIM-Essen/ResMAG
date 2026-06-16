@@ -31,6 +31,7 @@ include: "rules/analysis.smk"
 include: "rules/resistance.smk"
 
 
+
 rule all:
     input:
         expand("results/{project}/output/report/multiqc_{project}.html",project=get_project()),
@@ -98,6 +99,58 @@ rule all:
             project=get_project(),
             sample=get_samples(),
         ),
+        #cleanup
+        expand(
+            "results/{project}/cleanup/{sample}_fastp.done",
+            project=get_project(),
+            sample=get_samples(),
+        ),
+        expand(
+            "results/{project}/cleanup/{sample}_fastq.done",
+            project=get_project(),
+            sample=get_samples(),
+        ),
+        expand(
+            "results/{project}/cleanup/{sample}_human_map.done",
+            project=get_project(),
+            sample=get_samples(),
+        ),
+        expand(
+            "results/{project}/cleanup/{sample}_kaiju_reads.done",
+            project=get_project(),
+            sample=get_samples(),
+        ),
+        expand(
+            "results/{project}/cleanup/{sample}_kaiju_contigs.done",
+            project=get_project(),
+            sample=get_samples(),
+        ),
+        expand(
+            "results/{project}/cleanup/{sample}_gtdb.done",
+            project=get_project(),
+            sample=get_samples(),
+        ),
+        expand(
+            "results/{project}/cleanup/{sample}_unicard.done",
+            project=get_project(),
+            sample=get_samples(),
+        ),
+        expand(
+            "results/{project}/cleanup/{sample}_assembly.done",
+            project=get_project(),
+            sample=get_samples(),
+        ),
+        expand(
+            "results/{project}/cleanup/{sample}_proteins.done",
+            project=get_project(),
+            sample=get_samples(),
+        ),
+        expand(
+            "results/{project}/cleanup/{sample}_dastool.done",
+            project=get_project(),
+            sample=get_samples(),
+        ),
+
 '''# read classification output
         expand(
             "results/{project}/output/classification/reads/{sample}/{sample}_{level}_abundance.tsv",
