@@ -67,7 +67,6 @@ git clone https://github.com/IKIM-Essen/metagenomics_res.git
 1. Edit the `config/config.yaml` file:
    - Specify a project name (`project-name`)
    - Specify filtering options for human reads (`human-filtering`)
-   - Specify host filtering options, if you have a non-human host (`host-filtering`)
    - Specify options for different databases:
      - GTDB database needs to be downloaded before (see [Download GTDB](#download-gtdb))
      - UniCARD database needs to be create before (see [Create UniCARD database](#create-unicard-database))
@@ -91,6 +90,11 @@ Executing the workflow:
 ```snakemake --use-conda --cores $N -k```
 
 using `$N` cores. It is recommended to use all available cores.
+
+When using a container to execute the workflow:
+```snakemake --cores all --singularity-args "--bind $DB_DIR --bind $TEMP_DIR" --profile /groups/ds/metagenomes/ResMAG/config/profile/```
+
+you need to bind the directory where your databases are stored (`$DB_DIR`) and the temp directory (`$TEMP_DIR`).
 
 ---
 

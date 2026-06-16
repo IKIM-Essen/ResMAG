@@ -1,7 +1,3 @@
-report_input = list()
-if config["host-filtering"]["do-host-filtering"]:
-    report_input.append("results/{project}/output/report/host_filtering/")
-
 
 rule snakemake_report:
     input:

@@ -63,13 +63,7 @@ rule kaiju2krona_reads:
         krona=temp(
             "results/{project}/output/classification/reads/{sample}/kaiju.out.krona"
         ),
-        html=report(
-            "results/{project}/output/report/{sample}/{sample}_reads_kaiju.out.html",
-            htmlindex="index.html",
-            category="5. Taxonomic classification",
-            subcategory="5.2 Read classification",
-            labels={"sample": "{sample}"},
-        ),
+        html="results/{project}/output/report/{sample}/{sample}_kaiju_krona_reads.html",
     log:
         "logs/{project}/kaiju/{sample}_reads_2krona.log",
     conda:
@@ -157,13 +151,7 @@ use rule kaiju2krona_reads as kaiju2krona_contigs with:
         krona=temp(
             "results/{project}/output/classification/assembly/{sample}/kaiju.out.krona"
         ),
-        html=report(
-            "results/{project}/output/report/{sample}/{sample}_contigs_kaiju.out.html",
-            htmlindex="index.html",
-            category="5. Taxonomic classification",
-            subcategory="5.3 Contig classification",
-            labels={"sample": "{sample}"},
-        ),
+        html="results/{project}/output/report/{sample}/{sample}_kaiju_krona_contigs.html",
     log:
         "logs/{project}/contig_classification/{sample}_2krona.log",
 
@@ -296,3 +284,31 @@ rule cleanup_gtdb:
     priority: 1
     script:
         "../scripts/cleanup_files.py"
+        
+        
+rule tax_abundance_ncbi:
+    input:
+        tsv="results/{project}/output/classification/{stage}/{sample}/{sample}_{level}_abundance.tsv",
+    output:
+        csv="results/{project}/output/classification/{stage}/{sample}/{sample}_{stage}_{level}_abundance.csv",
+    log:
+        "logs/{project}/tax_abundance/{sample}/{stage}_{level}.log",
+    conda:
+        "../envs/python.yaml"
+    threads: 2
+    script:
+        "../scripts/ncbi_abundance.py"
+
+
+rule tax_abundance_gtdb:
+    input:
+        csv="results/{project}/output/report/{sample}/{sample}_summary_{stage}.csv",
+    output:
+        csv="results/{project}/output/classification/bins/{sample}/{sample}_{stage}_abundance.csv",
+    log:
+        "logs/{project}/tax_abundance/{sample}/{stage}.log",
+    conda:
+        "../envs/python.yaml"
+    threads: 2
+    script:
+        "../scripts/gtdb_abundance.py"

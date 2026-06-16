@@ -23,7 +23,7 @@ if not config["human-filtering"]["use-shared"]:
 
 rule map_to_human:
     input:
-        fastqs=get_prefiltered_fastqs,
+        fastqs=get_trimmed_fastqs,
         ref=get_human_ref(),
     output:
         bam=temp("results/{project}/human_filtering/alignments/{sample}.bam"),
@@ -154,49 +154,3 @@ rule cleanup_human_map:
     priority: 1
     script:
         "../scripts/cleanup_files.py"
-
-
-if config["host-filtering"]["do-host-filtering"]:
-    # if there is a different host than human,
-    # this is run before filtering human reads
-
-    use rule map_to_human as map_to_host with:
-        input:
-            fastqs=get_trimmed_fastqs,
-            ref=get_host_ref(),
-        output:
-            bam=temp("results/{project}/host_filtering/alignments/{sample}.bam"),
-        log:
-            "logs/{project}/host_filtering/map_to_host_{sample}.log",
-        threads: 20
-
-    use rule index_human_alignment as index_host_alignment with:
-        input:
-            rules.map_to_host.output.bam,
-        output:
-            bai=temp("results/{project}/host_filtering/alignments/{sample}.bam.bai"),
-        log:
-            "logs/{project}/host_filtering/index_host_alignment_{sample}.log",
-        threads: 3
-
-    rule filter_host:
-        input:
-            bam=rules.map_to_host.output.bam,
-            bai=rules.index_host_alignment.output.bai,
-        output:
-            filtered=temp(
-                expand(
-                    "results/{{project}}/host_filtering/non_host/{{sample}}_{read}.fastq.gz",
-                    read=["R1", "R2"],
-                )
-            ),
-        log:
-            "results/{project}/output/report/prerequisites/qc/{sample}_filter_host.log",
-        conda:
-            "../envs/minimap2.yaml"
-        threads: 64
-        shell:
-            "(samtools fastq -F 3584 -f 77 {input.bam} | "
-            "gzip -c > {output.filtered[0]} && "
-            "samtools fastq -F 3584 -f 141 {input.bam} | "
-            "gzip -c > {output.filtered[1]}) > {log} 2>&1"

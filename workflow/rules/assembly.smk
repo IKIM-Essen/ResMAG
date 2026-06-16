@@ -116,52 +116,15 @@ rule cleanup_assembly:
 rule assembly_summary:
     input:
         qc_csv=rules.qc_summary.output.csv,
-        asbl=expand(
-            "results/{{project}}/output/report/prerequisites/assembly/{sample}_megahit.log",
-            sample=get_samples(),
-        ),
-        mapped=expand(
-            "results/{{project}}/output/report/prerequisites/assembly/{sample}_reads_mapped.txt",
-            sample=get_samples(),
-        ),
-        csv_bins=expand(
-            "results/{{project}}/output/report/{sample}/{sample}_bin_summary.csv",
-            sample=get_samples(),
-        ),
-        csv_mags=expand(
-            "results/{{project}}/output/report/{sample}/{sample}_mags_summary.csv",
-            sample=get_samples(),
-        ),
+        asbl="results/{project}/output/report/prerequisites/assembly/{sample}_megahit.log",
+        mapped="results/{project}/output/report/prerequisites/assembly/{sample}_reads_mapped.txt",
+        csv_bins="results/{project}/output/report/{sample}/{sample}_summary_bins.csv",
+        csv_mags="results/{project}/output/report/{sample}/{sample}_summary_mags.csv",
     output:
-        csv="results/{project}/output/report/all/assembly_summary.csv",
-        vis_csv=temp("results/{project}/output/report/all/assembly_summary_visual.csv"),
+        csv="results/{project}/output/report/{sample}/{sample}_summary_assembly.csv",
     log:
-        "logs/{project}/report/assembly_summary.log",
+        "logs/{project}/report/{sample}_summary_assembly.log",
     conda:
         "../envs/python.yaml"
     script:
         "../scripts/assembly_summary.py"
-
-
-use rule qc_summary_report as assembly_report with:
-    input:
-        rules.assembly_summary.output.vis_csv,
-    output:
-        temp(
-            report(
-                directory("results/{project}/output/report/all/assembly/"),
-                htmlindex="index.html",
-                category="3. Assembly results",
-                labels={
-                    "sample": "all samples",
-                },
-            )
-        ),
-    params:
-        pin_until="sample",
-        styles="resources/report/tables/",
-        name="assembly_summary",
-        header="Assembly summary",
-        pattern=config["tablular-config"],
-    log:
-        "logs/{project}/report/assembly_rbt_csv.log",

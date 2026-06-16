@@ -19,7 +19,7 @@ rule checkm2_run:
         bins="results/{project}/output/fastas/{sample}/bins/",
         dbfile=get_checkm2_db(),
     output:
-        stats="results/{project}/output/report/{sample}/checkm2_quality_report.tsv",
+        stats="results/{project}/output/report/prerequisites/binning/{sample}/checkm2_quality_report.tsv",
     log:
         "logs/{project}/checkm2/{sample}.log",
     conda:
@@ -36,13 +36,12 @@ rule checkm2_run:
 
 rule bin_summary_sample:
     input:
-        tool="results/{project}/output/report/{sample}/{sample}_DASTool_summary.tsv",
-        checkm="results/{project}/output/report/{sample}/checkm2_quality_report.tsv",
+        tool="results/{project}/output/report/prerequisites/binning/{sample}/{sample}_DASTool_summary.tsv",
+        checkm="results/{project}/output/report/prerequisites/binning/{sample}/checkm2_quality_report.tsv",
         gtdb="results/{project}/output/classification/bins/{sample}/{sample}.summary.tsv",
     output:
-        csv_bins="results/{project}/output/report/{sample}/{sample}_bin_summary.csv",
-        csv_tax="results/{project}/output/report/{sample}/{sample}_bin_taxonomy.csv",
-        csv_mags="results/{project}/output/report/{sample}/{sample}_mags_summary.csv",
+        csv_bins="results/{project}/output/report/{sample}/{sample}_summary_bins.csv",
+        csv_mags="results/{project}/output/report/{sample}/{sample}_summary_mags.csv",
     log:
         "logs/{project}/bin_summary/{sample}.log",
     conda:
@@ -52,73 +51,4 @@ rule bin_summary_sample:
         max_cont=config["MAG-criteria"]["max-contamination"],
         min_comp=config["MAG-criteria"]["min-completeness"],
     script:
-        "../scripts/bin_summary_sample.py"
-
-
-use rule qc_summary_report as bin_sample_report with:
-    input:
-        "results/{project}/output/report/{sample}/{sample}_bin_summary.csv",
-    output:
-        temp(
-            report(
-                directory("results/{project}/output/report/{sample}/bin/"),
-                htmlindex="index.html",
-                category="4. Binning results",
-                subcategory="4.1 Summary",
-                labels={"sample": "{sample}"},
-            )
-        ),
-    log:
-        "logs/{project}/report/{sample}/bin_rbt_csv.log",
-    params:
-        pin_until="bin",
-        styles="resources/report/tables/",
-        name="{sample}_bin_summary",
-        header="Bin summary for sample {sample}",
-        pattern=config["tablular-config"],
-
-
-use rule qc_summary_report as taxonomy_report with:
-    input:
-        "results/{project}/output/report/{sample}/{sample}_bin_taxonomy.csv",
-    output:
-        temp(
-            report(
-                directory("results/{project}/output/report/{sample}/taxonomy/"),
-                htmlindex="index.html",
-                category="4. Binning results",
-                subcategory="4.3 Taxonomy classification",
-                labels={"sample": "{sample}"},
-            )
-        ),
-    log:
-        "logs/{project}/report/{sample}/taxonomy_rbt_csv.log",
-    params:
-        pin_until="bin",
-        styles="resources/report/tables/",
-        name="{sample}_taxonomy_summary",
-        header="Taxonomy summary for sample {sample}",
-        pattern=config["tablular-config"],
-
-
-use rule qc_summary_report as mag_report with:
-    input:
-        "results/{project}/output/report/{sample}/{sample}_mags_summary.csv",
-    output:
-        temp(
-            report(
-                directory("results/{project}/output/report/{sample}/mags/"),
-                htmlindex="index.html",
-                category="5. Taxonomic classification",
-                subcategory="5.1 MAGs classification",
-                labels={"sample": "{sample}"},
-            )
-        ),
-    log:
-        "logs/{project}/report/{sample}/mag_rbt_csv.log",
-    params:
-        pin_until="MAG",
-        styles="resources/report/tables/",
-        name="{sample}_MAG_summary",
-        header="MAG summary for sample {sample}",
-        pattern=config["tablular-config"],
+        "../scripts/bin_summary.py"

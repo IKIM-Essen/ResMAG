@@ -79,7 +79,7 @@ if bins_for_sample:
             summary=rules.dastool_run.output.summary,
         output:
             contig2bin="results/{project}/output/contig2bins/{sample}/DASTool_contig2bin.tsv",
-            summary="results/{project}/output/report/{sample}/{sample}_DASTool_summary.tsv",
+            summary="results/{project}/output/report/prerequisites/binning/{sample}/{sample}_DASTool_summary.tsv",
             done=touch("results/{project}/binning/das_tool/{sample}_move.done"),
         threads: 20
         log:
@@ -110,7 +110,7 @@ if bins_for_sample:
     rule move_MAGs:
         input:
             bin_dir=rules.gzip_bins.output.bins,
-            csv="results/{project}/output/report/{sample}/{sample}_mags_summary.csv",
+            csv="results/{project}/output/report/{sample}/{sample}_summary_mags.csv",
         output:
             outdir=directory("results/{project}/output/fastas/{sample}/mags/"),
         threads: 20

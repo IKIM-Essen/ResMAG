@@ -29,54 +29,24 @@ include: "rules/bin_qc.smk"
 include: "rules/classify.smk"
 include: "rules/analysis.smk"
 include: "rules/resistance.smk"
-#include: "rules/report.smk"
 
-report_input = list()
-if config["host-filtering"]["do-host-filtering"]:
-    report_input.append("results/{project}/output/report/host_filtering/")
 
 
 rule all:
     input:
-        report_input,
-        expand("results/{project}/output/report/all/multiqc_{project}.html",project=get_project()),
+        expand("results/{project}/output/report/multiqc_{project}.html",project=get_project()),
         # 2. Species diversity
-        expand("results/{project}/output/report/all/quality_summary/",project=get_project()),
+        expand("results/{project}/output/report/{sample}/{sample}_summary_quality.csv",project=get_project(),sample=get_samples(),),
         # 3. Assembly results
-        expand("results/{project}/output/report/all/assembly/",project=get_project()),
-        expand(
-            "results/{project}/output/report/{sample}/bin/",
-            project=get_project(),sample=get_samples(),
-        ),
-        expand(
-            "results/{project}/output/report/{sample}/taxonomy/",
-            project=get_project(),sample=get_samples(),
-        ),
+        expand("results/{project}/output/report/{sample}/{sample}_summary_assembly.csv",project=get_project(),sample=get_samples(),),
         # 5. Taxonomic classification
         expand(
-            "results/{project}/output/report/{sample}/mags/",
+            "results/{project}/output/report/{sample}/{sample}_kaiju_krona_reads.html",
             project=get_project(),sample=get_samples(),
         ),
         expand(
-            "results/{project}/output/report/{sample}/{sample}_reads_kaiju.out.html",
+            "results/{project}/output/report/{sample}/{sample}_kaiju_krona_contigs.html",
             project=get_project(),sample=get_samples(),
-        ),
-        expand(
-            "results/{project}/output/report/{sample}/{sample}_contigs_kaiju.out.html",
-            project=get_project(),sample=get_samples(),
-        ),
-        # read classification output
-        expand(
-            "results/{project}/output/classification/reads/{sample}/{sample}_{level}_abundance.tsv",
-            project=get_project(),
-            sample=get_samples(),
-            level=["species", "genus", "family", "order", "class", "phylum"],
-        ),
-        # binning summary output
-        expand(
-            "results/{project}/output/report/{sample}/{sample}_DASTool_summary.tsv",
-            project=get_project(),
-            sample=get_samples(),
         ),
         # fasta output
         expand(
@@ -88,6 +58,24 @@ rule all:
             "results/{project}/output/fastas/{sample}/mags/",
             project=get_project(),
             sample=get_samples(),
+        ),
+        expand(
+            "results/{project}/output/classification/bins/{sample}/{sample}_{stage}_abundance.csv",
+            project=get_project(),
+            sample=get_samples(),
+            stage=['bins','mags']
+        ),
+        expand(
+            "results/{project}/output/classification/reads/{sample}/{sample}_reads_{level}_abundance.csv",
+            project=get_project(),
+            sample=get_samples(),
+            level=["species", "genus", "family", "order", "class", "phylum"],
+        ),
+        expand(
+            "results/{project}/output/classification/assembly/{sample}/{sample}_assembly_{level}_abundance.csv",
+            project=get_project(),
+            sample=get_samples(),
+            level=["species", "genus"],
         ),
         # plasmid analysis
         expand(
@@ -102,8 +90,8 @@ rule all:
             sample=get_samples(),
         ),
         expand(
-            "results/{project}/output/resistance/uniCARD/{project}_drug_class_abundance_all_possible.csv",
-            project=get_project(),
+            "results/{project}/output/resistance/uniCARD/per_sample_resistance_abundance/{sample}_drug_class_abundance.csv",
+            project=get_project(),sample=get_samples(),
         ),
         #contig classification
         expand(
@@ -163,9 +151,10 @@ rule all:
             sample=get_samples(),
         ),
 
-
-'''# overall report
+'''# read classification output
         expand(
-            "results/{project}/output/report/report_{project}.zip",
+            "results/{project}/output/classification/reads/{sample}/{sample}_{level}_abundance.tsv",
             project=get_project(),
+            sample=get_samples(),
+            level=["species", "genus", "family", "order", "class", "phylum"],
         ),'''

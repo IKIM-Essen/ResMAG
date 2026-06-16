@@ -32,25 +32,11 @@ def get_trimmed_fastqs(wildcards):
     ]
 
 
-def get_prefiltered_fastqs(wildcards):
-    if config["host-filtering"]["do-host-filtering"]:
-        return [
-            "results/{project}/host_filtering/non_host/{sample}_R1.fastq.gz",
-            "results/{project}/host_filtering/non_host/{sample}_R2.fastq.gz",
-        ]
-    else:
-        return get_trimmed_fastqs(wildcards)
-
-
-def get_host_map_statistics(wildcards):
-    if config["host-filtering"]["do-host-filtering"]:
-        logs = expand(
-            "results/{{project}}/output/report/prerequisites/qc/filter_host_{sample}.log",
-            sample=get_samples(),
-        )
-        return logs
-    else:
-        return []
+def get_filtered_fastqs(wildcards):
+    return [
+        "results/{project}/output/filtered_reads/{sample}_R1.fastq",
+        "results/{project}/output/filtered_reads/{sample}_R2.fastq",
+    ]
 
 
 def get_filtered_gz_fastqs(wildcards):
@@ -99,10 +85,6 @@ def get_human_ref():
         filename = path.split("/")[-1]
         local_ref = "".join(["resources/ref_genome/", filename])
         return local_ref
-
-
-def get_host_ref():
-    return config["host-filtering"]["ref-genome"]
 
 
 def get_kaiju_files():
