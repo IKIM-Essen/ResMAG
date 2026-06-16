@@ -91,6 +91,11 @@ Executing the workflow:
 
 using `$N` cores. It is recommended to use all available cores.
 
+When using a container to execute the workflow:
+```snakemake --cores all --singularity-args "--bind $DB_DIR --bind $TEMP_DIR" --profile /groups/ds/metagenomes/ResMAG/config/profile/```
+
+you need to bind the directory where your databases are stored (`$DB_DIR`) and the temp directory (`$TEMP_DIR`).
+
 ---
 
 ## Output
