@@ -3,9 +3,6 @@ channels:
   - bioconda
   - anaconda
 dependencies:
-  - altair = 6.0.0
-  - biopython = 1.85
-  - distinctipy = 1.3.4
-  - numpy = 2.4.1
-  - matplotlib = 3.10.8
-  - pandas = 2.3.3
+  - pandas = 3.0.3
+  # for taxonomy
+  - ete4 = 4.3.0

@@ -218,3 +218,31 @@ rule gtdb_summary:
         "../envs/python.yaml"
     script:
         "../scripts/gtdb_summary.py"
+
+
+rule tax_abundance_ncbi:
+    input:
+        tsv="results/{project}/output/classification/{stage}/{sample}/{sample}_{level}_abundance.tsv",
+    output:
+        csv="results/{project}/output/classification/{stage}/{sample}/{sample}_{stage}_{level}_abundance.csv",
+    log:
+        "logs/{project}/tax_abundance/{sample}/{stage}_{level}.log",
+    conda:
+        "../envs/python.yaml"
+    threads: 2
+    script:
+        "../scripts/ncbi_abundance.py"
+
+
+rule tax_abundance_gtdb:
+    input:
+        csv="results/{project}/output/report/{sample}/{sample}_summary_{stage}.csv",
+    output:
+        csv="results/{project}/output/classification/bins/{sample}/{sample}_{stage}_abundance.csv",
+    log:
+        "logs/{project}/tax_abundance/{sample}/{stage}.log",
+    conda:
+        "../envs/python.yaml"
+    threads: 2
+    script:
+        "../scripts/gtdb_abundance.py"

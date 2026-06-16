@@ -56,6 +56,7 @@ rule CARD_read_run:
     input:
         fa=get_filtered_gz_fastqs,
         db=rules.CARD_annotation.output,
+        load=rules.CARD_load_DB_for_reads.output,
     output:
         txt="results/{project}/output/resistance/CARD/reads/{sample}/{sample}.gene_mapping_data.txt",
     log:
@@ -166,36 +167,8 @@ rule resistance_abundance_per_sample:
         "../envs/python.yaml"
     threads: 5
     script:
-        "../scripts/uniCARD_abundance_sample.py"
-
-'''
-rule resistance_abundance_all:
-    input:
-        contig_files=expand(
-            "results/{{project}}/output/classification/assembly/{sample}/{sample}_classified_contigs.csv",
-            sample=get_samples(),
-        ),
-        abd_class_files=expand(
-            "results/{{project}}/output/resistance/uniCARD/per_sample_resistance_abundance/{sample}_drug_class_abundance.csv",
-            sample=get_samples(),
-        ),
-        abd_ARGs_files=expand(
-            "results/{{project}}/output/resistance/uniCARD/per_sample_resistance_abundance/{sample}_ARGs_abundance.csv",
-            sample=get_samples(),
-        ),
-    output:
-        abd_class_possible="results/{project}/output/resistance/uniCARD/{project}_drug_class_abundance_all_possible.csv",
-        abd_class_present="results/{project}/output/resistance/uniCARD/{project}_drug_class_abundance_all_present.csv",
-        abd_ARGs_possible="results/{project}/output/resistance/uniCARD/{project}_ARGs_abundance_all_possible.csv",
-        abd_ARGs_present="results/{project}/output/resistance/uniCARD/{project}_ARGs_abundance_all_present.csv",
-    log:
-        "logs/{project}/uniCARD/all_abundances.log",
-    conda:
-        "../envs/python.yaml"
-    threads: 5
-    script:
         "../scripts/uniCARD_abundance.py"
-'''
+
 
 """
 # updates CARD database to use for contigs instead of reads

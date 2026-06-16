@@ -7,7 +7,7 @@ from snakemake.utils import min_version
 
 min_version("9.0.0")
 
-#containerized: "containerization/my_container.sif"
+containerized: "containerization/my_container.sif"
 
 configfile: "config/config.yaml"
 
@@ -47,13 +47,6 @@ rule all:
             "results/{project}/output/report/{sample}/{sample}_kaiju_krona_contigs.html",
             project=get_project(),sample=get_samples(),
         ),
-        # read classification output
-        expand(
-            "results/{project}/output/classification/reads/{sample}/{sample}_{level}_abundance.tsv",
-            project=get_project(),
-            sample=get_samples(),
-            level=["species", "genus", "family", "order", "class", "phylum"],
-        ),
         # fasta output
         expand(
             "results/{project}/output/fastas/{sample}/bins/",
@@ -64,6 +57,24 @@ rule all:
             "results/{project}/output/fastas/{sample}/mags/",
             project=get_project(),
             sample=get_samples(),
+        ),
+        expand(
+            "results/{project}/output/classification/bins/{sample}/{sample}_{stage}_abundance.csv",
+            project=get_project(),
+            sample=get_samples(),
+            stage=['bins','mags']
+        ),
+        expand(
+            "results/{project}/output/classification/reads/{sample}/{sample}_reads_{level}_abundance.csv",
+            project=get_project(),
+            sample=get_samples(),
+            level=["species", "genus", "family", "order", "class", "phylum"],
+        ),
+        expand(
+            "results/{project}/output/classification/assembly/{sample}/{sample}_assembly_{level}_abundance.csv",
+            project=get_project(),
+            sample=get_samples(),
+            level=["species", "genus"],
         ),
         # plasmid analysis
         expand(
@@ -87,3 +98,10 @@ rule all:
             project=get_project(),
             sample=get_samples(),
         ),
+'''# read classification output
+        expand(
+            "results/{project}/output/classification/reads/{sample}/{sample}_{level}_abundance.tsv",
+            project=get_project(),
+            sample=get_samples(),
+            level=["species", "genus", "family", "order", "class", "phylum"],
+        ),'''

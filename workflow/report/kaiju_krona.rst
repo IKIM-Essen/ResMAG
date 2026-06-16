@@ -1,1 +1,0 @@
-Krona plot showing the results for `Kaiju <https://github.com/bioinformatics-centre/kaiju>`_ classification of the reads after filtering out human reads.
