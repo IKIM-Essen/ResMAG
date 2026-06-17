@@ -31,7 +31,6 @@ include: "rules/analysis.smk"
 include: "rules/resistance.smk"
 
 
-
 rule all:
     input:
         expand("results/{project}/output/report/multiqc_{project}.html",project=get_project()),
@@ -158,3 +157,13 @@ rule all:
             sample=get_samples(),
             level=["species", "genus", "family", "order", "class", "phylum"],
         ),'''
+
+
+PROJECT=get_project()
+
+onsuccess:
+    print("Pipeline finished without an error. Cleaning all temporary files: ")
+    shell("bash workflow/scripts/cleanup_intermediate.sh results/{PROJECT}")
+
+onerror:
+    print("An error occurred while running the pipeline. Clean up of temporary files will be skipped.")

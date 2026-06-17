@@ -99,7 +99,7 @@ rule cleanup_fastp:
         # actually delete these
         to_delete=lambda wc: [
             f"results/{wc.project}/trimmed/fastp/{wc.sample}.html",
-            *get_prefiltered_fastqs(wc)
+            *get_trimmed_fastqs(wc)
         ]
     output:
         touch("results/{project}/cleanup/{sample}_fastp.done"),
