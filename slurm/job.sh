@@ -17,7 +17,7 @@ echo "starting snakemake workflow"
 snakemake \
     --cores 64 \
     --profile /groups/ds/metagenomes/ResMAG/config/profile/ \
-    --singularity-args "--bind /groups/ds/databases_refGenomes"
+    --singularity-args "--bind /groups/ds/databases_refGenomes --bind /local/tmp/"
 
 echo "cleaning snakemake temp output"
 snakemake --delete-temp-output
