@@ -22,7 +22,7 @@ rule metabat:
         abd=rules.coverm_metabat.output.abd,
     output:
         outdir=temp(directory("results/{project}/binning/metabat/{sample}/")),
-    threads: 64
+    threads: 60
     params:
         prefix="bin",
     log:

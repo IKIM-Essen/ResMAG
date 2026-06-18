@@ -30,7 +30,7 @@ rule gzip_proteins:
     priority: 1
     conda:
         "../envs/unix.yaml"
-    threads: 20
+    threads: 16
     shell:
         "gzip {input.faa} {input.fna} {input.gff} > {log} 2>&1"
 
@@ -92,7 +92,7 @@ rule genomad_run:
         "logs/{project}/plasmids/{sample}_run.log",
     conda:
         "../envs/genomad.yaml"
-    threads: 64
+    threads: 60
     params:
         outdir=lambda wildcards, output: Path(output.plasmid_tsv).parent.parent,
     shell:
@@ -112,7 +112,7 @@ rule move_genomad_output:
         "logs/{project}/plasmids/{sample}_move_output.log",
     conda:
         "../envs/unix.yaml"
-    threads: 32
+    threads: 2
     params:
         outdir=lambda wildcards, output: Path(output.plasmid_tsv).parent,
         sum_folder=lambda wildcards, input: Path(input.plasmid_tsv).parent,

@@ -33,7 +33,7 @@ rule map_to_assembly:
         bam=temp(
             "results/{project}/output/report/prerequisites/assembly/{sample}_reads_mapped.bam"
         ),
-    threads: 64
+    threads: 60
     log:
         "logs/{project}/assembly/{sample}_mapping_reads.log",
     conda:
@@ -51,7 +51,7 @@ rule index_assembly_alignment:
         bai=temp(
             "results/{project}/output/report/prerequisites/assembly/{sample}_reads_mapped.bam.bai"
         ),
-    threads: 20
+    threads: 2
     log:
         "logs/{project}/assembly/{sample}_mapping_reads_index.log",
     conda:
@@ -66,7 +66,7 @@ rule reads_mapped_assembly:
         bai=rules.index_assembly_alignment.output.bai,
     output:
         txt="results/{project}/output/report/prerequisites/assembly/{sample}_reads_mapped.txt",
-    threads: 20
+    threads: 16
     log:
         "logs/{project}/assembly/{sample}_mapping_reads.log",
     conda:
@@ -81,7 +81,7 @@ rule gzip_assembly:
         contigs=get_assembly,
     output:
         "results/{project}/output/fastas/{sample}/{sample}.fa.gz",
-    threads: 20
+    threads: 16
     priority: 1
     log:
         "logs/{project}/assembly/{sample}_gzip.log",

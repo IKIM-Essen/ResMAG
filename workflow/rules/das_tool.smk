@@ -9,7 +9,7 @@ rule postprocess_metabat:
     params:
         binner="metabat",
         prefix="bin",
-    threads: 12
+    threads: 4
     log:
         "logs/{project}/contig2bins/{sample}/postprocess_metabat.log",
     conda:
@@ -23,7 +23,7 @@ rule postprocess_metacoag:
         c2bin="results/{project}/binning/metacoag/{sample}/contig_to_bin.tsv",
     output:
         tsv="results/{project}/output/contig2bins/{sample}/metacoag_contig2bin.tsv",
-    threads: 12
+    threads: 4
     log:
         "logs/{project}/contig2bins/{sample}/postprocess_metacoag.log",
     conda:
@@ -53,7 +53,7 @@ rule dastool_run:
     params:
         outdir=lambda wildcards, output: Path(output.bins).parent,
         threshold=0.001,
-    threads: 64
+    threads: 60
     resources:
         heavy=2,
     log:
@@ -81,7 +81,7 @@ if bins_for_sample:
             contig2bin="results/{project}/output/contig2bins/{sample}/DASTool_contig2bin.tsv",
             summary="results/{project}/output/report/prerequisites/binning/{sample}/{sample}_DASTool_summary.tsv",
             done=touch("results/{project}/binning/das_tool/{sample}_move.done"),
-        threads: 20
+        threads: 4
         log:
             "logs/{project}/das_tool/{sample}/move_output.log",
         conda:
@@ -96,7 +96,7 @@ if bins_for_sample:
         output:
             bins=directory("results/{project}/output/fastas/{sample}/bins/"),
             done=touch("results/{project}/binning/das_tool/{sample}_bins.done"),
-        threads: 10
+        threads: 8
         priority: 1
         log:
             "logs/{project}/bins/{sample}/gz_bins.log",
@@ -113,7 +113,7 @@ if bins_for_sample:
             csv="results/{project}/output/report/{sample}/{sample}_summary_mags.csv",
         output:
             outdir=directory("results/{project}/output/fastas/{sample}/mags/"),
-        threads: 20
+        threads: 8
         log:
             "logs/{project}/bins/{sample}/move_MAGs.log",
         conda:

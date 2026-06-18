@@ -12,6 +12,7 @@ if not config["human-filtering"]["use-shared"]:
             "refGenome_depended"
         conda:
             "../envs/unix.yaml"
+        threads: 60
         params:
             download=get_human_ref_download(),
             folder=lambda wildcards, output: Path(output.fasta).parent,
@@ -31,7 +32,7 @@ rule map_to_human:
         "logs/{project}/human_filtering/map_to_human_{sample}.log",
     conda:
         "../envs/minimap2.yaml"
-    threads: 64
+    threads: 60
     shell:
         "(minimap2 -a -xsr -t {threads} {input.ref} {input.fastqs} | "
         "samtools view -bh | "
@@ -47,7 +48,7 @@ rule index_human_alignment:
         "logs/{project}/human_filtering/index_human_alignment_{sample}.log",
     conda:
         "../envs/minimap2.yaml"
-    threads: 20
+    threads: 2
     shell:
         "samtools index {input} > {log} 2>&1"
 
@@ -67,7 +68,7 @@ rule filter_human:
         "results/{project}/output/report/prerequisites/qc/{sample}_filter_human.log",
     conda:
         "../envs/minimap2.yaml"
-    threads: 64
+    threads: 60
     shell:
         "(samtools fastq --threads {threads} -F 3584 -f 77 "
         "-o {output.filtered[0]} {input.bam} && "
@@ -85,7 +86,7 @@ rule gzip_filtered_reads:
     priority: 1
     conda:
         "../envs/unix.yaml"
-    threads: 20
+    threads: 16
     shell:
         "gzip -k {input} > {log} 2>&1"
 

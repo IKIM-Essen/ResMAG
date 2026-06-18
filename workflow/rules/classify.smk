@@ -26,7 +26,7 @@ rule run_kaiju_reads:
         report=temp("results/{project}/output/classification/reads/{sample}/kaiju.out"),
     params:
         evalue=0.00001,
-    threads: 64
+    threads: 60
     log:
         "logs/{project}/kaiju/{sample}_reads_run.log",
     conda:
@@ -122,7 +122,7 @@ rule gzip_kaiju_contigs:
         report=rules.run_kaiju_contigs.output.report,
     output:
         report="results/{project}/output/classification/assembly/{sample}/kaiju.out.gz",
-    threads: 20
+    threads: 16
     priority: 1
     log:
         "logs/{project}/contig_classification/{sample}_kaiju_gzip.log",
@@ -161,7 +161,7 @@ rule extract_contig_headers:
         assembly=get_gz_assembly,
     output:
         headers="results/{project}/output/classification/assembly/{sample}/headers.txt",
-    threads: 10
+    threads: 4
     log:
         "logs/{project}/contig_classification/{sample}_header.log",
     conda:
@@ -180,7 +180,7 @@ rule contig_classification:
         csv="results/{project}/output/classification/assembly/{sample}/{sample}_classified_contigs.csv",
     log:
         "logs/{project}/contig_classification/{sample}_classified_contigs.log",
-    threads: 5
+    threads: 4
     conda:
         "../envs/python.yaml"
     script:
@@ -222,7 +222,7 @@ rule gtdbtk_classify_wf:
         clf_outdir=lambda wildcards, output: Path(output.json).parent,
         json=lambda wildcards, output: Path(output.json).name,
         db_folder=get_gtdb_folder(),
-    threads: 40
+    threads: 32
     # to ensure only one of these commands are run at the same time
     resources:
         heavy=1,
@@ -257,7 +257,7 @@ rule gtdb_summary:
         summary="results/{project}/output/classification/bins/{sample}/{sample}.summary.tsv",
     params:
         outdir=lambda wildcards, input: Path(input.json).parent,
-    threads: 10
+    threads: 4
     log:
         "logs/{project}/gtdbtk/{sample}_summary.log",
     conda:

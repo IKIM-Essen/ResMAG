@@ -69,7 +69,7 @@ rule metacoag_run:
         out_tsv=temp("results/{project}/binning/metacoag/{sample}/contig_to_bin.tsv"),
     params:
         outdir=lambda wildcards, output: Path(output.out_tsv).parent,
-    threads: 64
+    threads: 4
     log:
         "logs/{project}/metacoag/{sample}.log",
     conda:

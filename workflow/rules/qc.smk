@@ -40,7 +40,7 @@ rule fastqc:
         "logs/{project}/fastqc/{sample}.log",
     conda:
         "../envs/fastqc.yaml"
-    threads: 4
+    threads: 2
     resources:
         mem_mb=1024,
     shell:
