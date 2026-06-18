@@ -37,12 +37,15 @@ rule snakemake_report:
         "results/{project}/output/report/report_{project}.zip",
     params:
         style="resources/report/custom-stylesheet.css",
+        profile=get_sm_profile(),
     #    for_testing=get_if_testing("--snakefile ../workflow/Snakefile"),
     log:
         "logs/{project}/snakemake-report.log",
     conda:
         "../envs/snakemake.yaml"
     shell:
-        "snakemake --nolock --report {output} --report-stylesheet {params.style} "
+        "snakemake --nolock --report {output} "
+        "--report-stylesheet {params.style} "
+        "--profile {params.profile} "
         "> {log} 2>&1"
         #"{params.for_testing} "

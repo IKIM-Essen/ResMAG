@@ -62,7 +62,7 @@ rule CARD_read_run:
         "logs/{project}/ARGs/reads/{sample}.log",
     conda:
         "../envs/card.yaml"
-    threads: 64
+    threads: 60
     params:
         folder=lambda wildcards, output: Path(output.txt).parent,
     shell:
@@ -142,7 +142,7 @@ rule filter_uniCARD:
         "logs/{project}/uniCARD/{sample}_filter.log",
     conda:
         "../envs/python.yaml"
-    threads: 20
+    threads: 16
     params:
         # filter window for filtering UniCARD results, default: 1%
         filter_window=0.01,

@@ -12,6 +12,7 @@ if not config["human-filtering"]["use-shared"]:
             "refGenome_depended"
         conda:
             "../envs/unix.yaml"
+        threads: 60
         params:
             download=get_human_ref_download(),
             folder=lambda wildcards, output: Path(output.fasta).parent,
@@ -31,7 +32,7 @@ rule map_to_human:
         "logs/{project}/human_filtering/map_to_human_{sample}.log",
     conda:
         "../envs/minimap2.yaml"
-    threads: 64
+    threads: 60
     shell:
         "(minimap2 -a -xsr -t {threads} {input.ref} {input.fastqs} | "
         "samtools view -bh | "
@@ -47,7 +48,7 @@ rule index_human_alignment:
         "logs/{project}/human_filtering/index_human_alignment_{sample}.log",
     conda:
         "../envs/minimap2.yaml"
-    threads: 20
+    threads: 2
     shell:
         "samtools index {input} > {log} 2>&1"
 
@@ -67,7 +68,7 @@ rule filter_human:
         "results/{project}/output/report/prerequisites/qc/{sample}_filter_human.log",
     conda:
         "../envs/minimap2.yaml"
-    threads: 64
+    threads: 60
     shell:
         "(samtools fastq --threads {threads} -F 3584 -f 77 "
         "-o {output.filtered[0]} {input.bam} && "
@@ -102,7 +103,6 @@ if config["host-filtering"]["do-host-filtering"]:
             bam=temp("results/{project}/host_filtering/alignments/{sample}.bam"),
         log:
             "logs/{project}/host_filtering/map_to_host_{sample}.log",
-        threads: 20
 
     use rule index_human_alignment as index_host_alignment with:
         input:
@@ -111,7 +111,6 @@ if config["host-filtering"]["do-host-filtering"]:
             bai=temp("results/{project}/host_filtering/alignments/{sample}.bam.bai"),
         log:
             "logs/{project}/host_filtering/index_host_alignment_{sample}.log",
-        threads: 3
 
     rule filter_host:
         input:
@@ -128,7 +127,7 @@ if config["host-filtering"]["do-host-filtering"]:
             "results/{project}/output/report/prerequisites/qc/{sample}_filter_host.log",
         conda:
             "../envs/minimap2.yaml"
-        threads: 64
+        threads: 60
         shell:
             "(samtools fastq -F 3584 -f 77 {input.bam} | "
             "gzip -c > {output.filtered[0]} && "
