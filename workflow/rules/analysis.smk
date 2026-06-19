@@ -2,10 +2,12 @@
 rule gene_identification:
     input:
         contigs=get_assembly,
+        # to not delte output folder with assembly
+        outdir=rules.megahit.output.outdir,
     output:
-        faa="results/{project}/output/proteins/{sample}/{sample}_proteins.faa",
-        fna="results/{project}/output/proteins/{sample}/{sample}_nucleotides.fna",
-        gff="results/{project}/output/proteins/{sample}/{sample}_annotations.gff",
+        faa=temp("results/{project}/output/proteins/{sample}/{sample}_proteins.faa"),
+        fna=temp("results/{project}/output/proteins/{sample}/{sample}_nucleotides.fna"),
+        gff=temp("results/{project}/output/proteins/{sample}/{sample}_annotations.gff"),
     log:
         "logs/{project}/proteins/{sample}.log",
     conda:
@@ -33,30 +35,6 @@ rule gzip_proteins:
     threads: 16
     shell:
         "gzip {input.faa} {input.fna} {input.gff} > {log} 2>&1"
-
-
-rule cleanup_proteins:
-    input:
-        # dependency only
-        gz_faa=rules.gzip_proteins.output.faa,
-        gz_fna=rules.gzip_proteins.output.fna,
-        gz_gff=rules.gzip_proteins.output.gff,
-        # actually delete these
-        to_delete=[
-            rules.gene_identification.output.faa,
-            rules.gene_identification.output.fna,
-            rules.gene_identification.output.gff,
-        ]
-    output:
-        touch("results/{project}/cleanup/{sample}_proteins.done"),
-    log:
-        "logs/{project}/cleanup_proteins/{sample}.log",
-    conda:
-        "../envs/unix.yaml"
-    threads: 1
-    priority: 1
-    script:
-        "../scripts/cleanup_files.py"
 
 
 # Plasmid analysis
