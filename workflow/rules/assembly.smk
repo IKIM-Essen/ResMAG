@@ -29,6 +29,8 @@ rule map_to_assembly:
     input:
         contigs=get_assembly,
         fastqs=get_filtered_gz_fastqs,
+        # to not delte output folder with assembly
+        outdir=rules.megahit.output.outdir,
     output:
         bam=temp(
             "results/{project}/output/report/prerequisites/assembly/{sample}_reads_mapped.bam"
@@ -79,6 +81,8 @@ rule reads_mapped_assembly:
 rule gzip_assembly:
     input:
         contigs=get_assembly,
+        # to not delte output folder with assembly
+        outdir=rules.megahit.output.outdir,
     output:
         "results/{project}/output/fastas/{sample}/{sample}.fa.gz",
     threads: 16
@@ -89,28 +93,6 @@ rule gzip_assembly:
         "../envs/unix.yaml"
     shell:
         "gzip -c {input.contigs} > {output} 2> {log}"
-
-
-rule cleanup_assembly:
-    input:
-        # dependency only
-        txt=rules.reads_mapped_assembly.output.txt,
-
-        # actually delete these
-        to_delete=[
-            rules.map_to_assembly.output.bam,
-            rules.index_assembly_alignment.output.bai,
-        ] 
-    output:
-        touch("results/{project}/cleanup/{sample}_assembly.done"),
-    log:
-        "logs/{project}/cleanup_assembly/{sample}.log",
-    conda:
-        "../envs/unix.yaml"
-    threads: 1
-    priority: 1
-    script:
-        "../scripts/cleanup_files.py"
 
 
 rule assembly_summary:
