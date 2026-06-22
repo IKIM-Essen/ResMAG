@@ -218,18 +218,46 @@ rule gtdb_summary:
         "../envs/python.yaml"
     script:
         "../scripts/gtdb_summary.py"
-        
+
+
+rule prep_ncbi_database:
+    output:
+        touch("results/{project}/ncbi_database_prep.done"),
+    log:
+        "logs/{project}/tax_abundance/ncbi_prep.log",
+    params: db_prep=True,
+    conda:
+        "../envs/python.yaml"
+    threads: 5
+    script:
+        "../scripts/ncbi_abundance.py"
+
+
+rule prep_gtdb_database:
+    output:
+        touch("results/{project}/gtdb_database_prep.done"),
+    log:
+        "logs/{project}/tax_abundance/gtdb_prep.log",
+    params: db_prep=True,
+    conda:
+        "../envs/python.yaml"
+    threads: 5
+    script:
+        "../scripts/gtdb_abundance.py"
+
         
 rule tax_abundance_ncbi:
     input:
         tsv="results/{project}/output/classification/{stage}/{sample}/{sample}_{level}_abundance.tsv",
+        db=rules.prep_ncbi_database.output,
     output:
         csv="results/{project}/output/classification/{stage}/{sample}/{sample}_{stage}_{level}_abundance.csv",
     log:
         "logs/{project}/tax_abundance/{sample}/{stage}_{level}.log",
+    params: db_prep=False,
     conda:
         "../envs/python.yaml"
-    threads: 2
+    threads: 5
     script:
         "../scripts/ncbi_abundance.py"
 
@@ -237,12 +265,14 @@ rule tax_abundance_ncbi:
 rule tax_abundance_gtdb:
     input:
         csv="results/{project}/output/report/{sample}/{sample}_summary_{stage}.csv",
+        db=rules.prep_gtdb_database.output,
     output:
         csv="results/{project}/output/classification/bins/{sample}/{sample}_{stage}_abundance.csv",
     log:
         "logs/{project}/tax_abundance/{sample}/{stage}.log",
+    params: db_prep=False,
     conda:
         "../envs/python.yaml"
-    threads: 2
+    threads: 5
     script:
         "../scripts/gtdb_abundance.py"
