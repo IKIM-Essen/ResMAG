@@ -13,8 +13,4 @@ rm -rf "${RESULTS_DIR}"/megahit/
 rm -rf "${RESULTS_DIR}"/qc/
 rm -rf "${RESULTS_DIR}"/trimmed/
 
-rm -f "${RESULTS_DIR}"/output/proteins/*/*.gff
-rm -f "${RESULTS_DIR}"/output/proteins/*/*.fna
-rm -f "${RESULTS_DIR}"/output/proteins/*/*.faa
-
 echo "Cleanup complete."

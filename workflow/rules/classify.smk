@@ -222,7 +222,7 @@ rule gtdb_summary:
 
 rule prep_ncbi_database:
     output:
-        touch("results/{project}/ncbi_database_prep.done"),
+        temp(touch("results/{project}/ncbi_database_prep.done")),
     log:
         "logs/{project}/tax_abundance/ncbi_prep.log",
     params: db_prep=True,
@@ -235,7 +235,7 @@ rule prep_ncbi_database:
 
 rule prep_gtdb_database:
     output:
-        touch("results/{project}/gtdb_database_prep.done"),
+        temp(touch("results/{project}/gtdb_database_prep.done")),
     log:
         "logs/{project}/tax_abundance/gtdb_prep.log",
     params: db_prep=True,
