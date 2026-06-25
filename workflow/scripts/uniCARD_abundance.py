@@ -1,19 +1,21 @@
 import pandas as pd
 import json
 import sys
+import re
 
 sys.stderr = open(snakemake.log[0], "w")
 
 card_drugs = snakemake.input.json
 args_file = snakemake.input.csv
 contig_file = snakemake.input.contig_file
+contig_len_file = snakemake.input.contig_len
 sample_id = snakemake.wildcards.sample
 
 # abundance outfiles
 abd_class = snakemake.output.abd_class
 abd_ARGs = snakemake.output.abd_ARGs
 
-## Write drug classes and ARO names abundance:
+# Load CARD database drug class information
 with open(card_drugs) as f:
     data = json.load(f)
 
@@ -24,7 +26,7 @@ df_card = pd.DataFrame.from_dict(data, orient="index")
 df_card["classes"] = df_card["classes"].str.split("; ")
 df_card["antibiotics"] = df_card["antibiotics"].str.split("; ")
 
-# Flatten and get unique values
+# Flatten and get unique values for drug classes and antibiotics
 all_classes = pd.Series(
     [item for sublist in df_card["classes"].dropna() for item in sublist]
 ).unique()
@@ -36,77 +38,148 @@ all_antibiotics = pd.Series(
 all_aros = df_card["ARO_name"].unique()
 all_aros = sorted(all_aros)
 
+# ---------------------------------------------------------
+# Create abundance table for ARG drug classes per contig
+# ---------------------------------------------------------
 
-# read in contig classification
+# Read contig lengths
+contig_len_df = pd.read_csv(contig_len_file)
+
+# read in contig classification file
 classification_df = pd.read_csv(contig_file)
+classification_df.drop(["contig_len"], axis=1, inplace=True)
 
-##Create classes and ARG names abundance files
+# Read in resistance information
 df_args = pd.read_csv(args_file)
+
+# Make a copy for drug classes to avoid modifying original df
 df_args_for_classes = df_args.copy()
-# Step 1: Preprocess the classes column into lists
+
+# Convert semicolon-separated class strings into lists
+# Example: "aminoglycoside antibiotic;carbapenem" -> ["aminoglycoside antibiotic", "carbapenem"]
 df_args_for_classes["class_list"] = (
     df_args_for_classes["classes"]
     .fillna("")
     .apply(lambda x: [c.strip() for c in x.split(";")])
 )
 
-# Step 2: Create one-hot columns per class
+# Create one-hot encoded columns for each drug class
+# (1 = class present for this ARG, 0 = absent)
 for c in all_classes:
     df_args_for_classes[c] = df_args_for_classes["class_list"].apply(
         lambda lst: int(c in lst)
     )
 
-# Step 3: Group by contig
+# Aggregate counts per contig
+# "#ARGs" = number of ARGs (ARO_IDs) on the contig
+# Drug class columns are summed to give abundance per class
 agg_dict = {"ARO_ID": "count"}
 agg_dict.update(
-    {c: "sum" for c in all_classes}  # was max before
-)  # "sum" counts how many times the class appears
-
-
-class_abundance_df = df_args_for_classes.groupby("contig").agg(agg_dict).reset_index()
-# Write out abundance file
-class_abundance_df = class_abundance_df.rename(columns={"ARO_ID": "#ARGs"})
-
-merged_classes_df = classification_df.merge(
-    class_abundance_df, on="contig", how="inner"
+    {c: "sum" for c in all_classes}  # "sum" counts how many times the class appears
 )
-merged_classes_df.insert(0, "sampleID", sample_id)
 
+class_abundance_df = (
+    df_args_for_classes.groupby("contig")
+    .agg(agg_dict)
+    .reset_index()
+    .rename(columns={"ARO_ID": "#ARGs"})
+)
+
+# Merge with taxonomic classification
+# Use LEFT JOIN to keep all contigs containing ARGs
+merged_classes_df = class_abundance_df.merge(classification_df, on="contig", how="left")
+
+# Add contig lengths
+merged_classes_df = merged_classes_df.merge(contig_len_df, on="contig", how="left")
+
+# Fill missing taxonomy information
+# Contigs without classification are labelled as unclassified
+merged_classes_df["level"] = merged_classes_df["level"].fillna("unclassified")
+
+merged_classes_df["classification"] = merged_classes_df["classification"].fillna(
+    "unclassified"
+)
+
+# Reorder columns
+# Sort drug classes
+class_columns = sorted([a for a in all_classes if a in merged_classes_df.columns])
+cols = [
+    "contig",
+    "contig_len",
+    "level",
+    "classification",
+    "#ARGs",
+] + class_columns
+merged_classes_df = merged_classes_df[cols]
+merged_classes_df.insert(0, "sample", sample_id)
+
+# Write out class abundance file
 merged_classes_df.to_csv(abd_class, index=False)
 
 
+# ---------------------------------------------------------
+# Create ARG abundance table per contig
+# ---------------------------------------------------------
+
+"""# Add a column indicating presence of an ARG hit
 df_args["present"] = 1
 
-# Step 2: Pivot to get binary presence/absence for all ARO_name per contig
+# Create a contig × ARG matrix
+# Values correspond to the number of occurrences of each ARG
 aro_matrix = df_args.pivot_table(
     index="contig",
     columns="ARO_name",
     values="present",
-    aggfunc="sum",  # <-- changed from "max" to "sum"
+    aggfunc="sum",  # changed from "max" to "sum"
     fill_value=0,
-)
+)"""
+# Create a contig × ARG matrix
+# Values correspond to the number of occurrences of each ARG
+aro_matrix = df_args.groupby(["contig", "ARO_name"]).size().unstack(fill_value=0)
 
-# Step 3: Count ARGs (genes) per contig
+
+# Count the total number of ARGs per contig
 gene_counts = df_args.groupby("contig").size().rename("#ARGs")
 
-# Step 4: Join gene counts and presence matrix
+# Combine total ARG counts and ARG abundance matrix
 names_abundance_df = pd.concat([gene_counts, aro_matrix], axis=1).reset_index()
 
-# Find missing AROs
+# Add columns for ARGs that are absent in this sample
+# so all output files have identical columns
 missing_aros = [aro for aro in all_aros if aro not in names_abundance_df.columns]
 
-# Create a DataFrame with 0s for missing AROs (same index as result)
-missing_df = pd.DataFrame(0, index=names_abundance_df.index, columns=missing_aros)
+if missing_aros:
+    missing_df = pd.DataFrame(0, index=names_abundance_df.index, columns=missing_aros)
 
-# Concatenate in one go — avoids fragmentation
-names_abundance_df = pd.concat([names_abundance_df, missing_df], axis=1)
+    names_abundance_df = pd.concat([names_abundance_df, missing_df], axis=1)
 
-# Optional: reorder columns — num_genes first, then sorted AROs
-aro_columns = sorted([a for a in all_aros if a in names_abundance_df.columns])
-names_abundance_df = names_abundance_df[["contig", "#ARGs"] + aro_columns]
+# Merge with taxonomic classification
+# Use LEFT JOIN to keep all contigs containing ARGs
+merged_names_df = names_abundance_df.merge(classification_df, on="contig", how="left")
 
-# Write out abundance file
-merged_names_df = classification_df.merge(names_abundance_df, on="contig", how="inner")
-merged_names_df.insert(0, "sampleID", sample_id)
+# Add contig lengths
+merged_names_df = merged_names_df.merge(contig_len_df, on="contig", how="left")
 
+# Fill missing taxonomy information
+# Contigs without classification are labelled as unclassified
+merged_names_df["level"] = merged_names_df["level"].fillna("unclassified")
+
+merged_names_df["classification"] = merged_names_df["classification"].fillna(
+    "unclassified"
+)
+
+# Reorder columns
+# Sort ARGs
+aro_columns = sorted([a for a in all_aros if a in merged_names_df.columns])
+cols = [
+    "contig",
+    "contig_len",
+    "level",
+    "classification",
+    "#ARGs",
+] + aro_columns
+merged_names_df = merged_names_df[cols]
+merged_names_df.insert(0, "sample", sample_id)
+
+# Write out ARG abundance file
 merged_names_df.to_csv(abd_ARGs, index=False)

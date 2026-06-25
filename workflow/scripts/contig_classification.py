@@ -7,10 +7,9 @@ sys.stderr = open(snakemake.log[0], "w")
 kaiju_out = snakemake.input.out
 kaiju_species = snakemake.input.species
 kaiju_genus = snakemake.input.genus
-headers = snakemake.input.headers
+contig_len = snakemake.input.contig_len
 
 classification = snakemake.output.csv
-
 
 ## Prepare classification and length information for all contigs classified to at least genus level ##
 
@@ -49,21 +48,7 @@ kaiju_df_red = kaiju_df_red.drop(
 )
 
 # get contig length
-records = []
-
-with open(headers) as f:
-    for line in f:
-        # Example header: >k141_570066 flag=0 multi=1.0000 len=450
-        contig_match = re.search(r"^>(\S+)", line)
-        length_match = re.search(r"len=(\d+)", line)
-
-        if contig_match and length_match:
-            contig = contig_match.group(1)
-            length = int(length_match.group(1))
-            records.append((contig, length))
-
-# Convert to DataFrame
-length_df = pd.DataFrame(records, columns=["contig", "contig_len"])
+length_df = pd.read_csv(contig_len)
 
 # merge contig classification with length information
 merged_df = kaiju_df_red.merge(length_df, on="contig", how="left")

@@ -158,6 +158,7 @@ rule resistance_abundance_per_sample:
         csv=rules.filter_uniCARD.output.csv,
         json=get_CARD_hierarchy(),
         contig_file="results/{project}/output/classification/assembly/{sample}/{sample}_classified_contigs.csv",
+        contig_len=rules.extract_contig_headers.output.contig_len,
     output:
         abd_class="results/{project}/output/resistance/uniCARD/per_sample_resistance_abundance/{sample}_drug_class_abundance.csv",
         abd_ARGs="results/{project}/output/resistance/uniCARD/per_sample_resistance_abundance/{sample}_ARGs_abundance.csv",

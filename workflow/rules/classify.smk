@@ -136,14 +136,29 @@ rule extract_contig_headers:
     input:
         assembly=get_gz_assembly,
     output:
-        headers="results/{project}/output/classification/assembly/{sample}/headers.txt",
+        contig_len="results/{project}/output/classification/assembly/{sample}/{sample}_contigs_length.csv",
     threads: 4
     log:
-        "logs/{project}/contig_classification/{sample}_header.log",
+        "logs/{project}/contig_classification/{sample}_contig_length.log",
     conda:
         "../envs/unix.yaml"
     shell:
-        "(zgrep '>' {input.assembly} > {output.headers}) > {log} 2>&1"
+        r"""
+        (
+            gzip -cd {input.assembly} | \
+            awk '
+                BEGIN{{print "contig,contig_len"}}
+                /^>/ {{
+                    sub(/^>/,"",$1);
+                    for(i=1;i<=NF;i++)
+                        if($i~/^len=/){{
+                            split($i,a,"=");
+                            print $1","a[2]
+                        }}
+                }}
+            '
+        ) > {output.contig_len} 2> {log}
+        """
 
 
 rule contig_classification:
@@ -151,7 +166,7 @@ rule contig_classification:
         out=rules.run_kaiju_contigs.output.report,
         genus="results/{project}/output/classification/assembly/{sample}/{sample}_genus_abundance.tsv",
         species="results/{project}/output/classification/assembly/{sample}/{sample}_species_abundance.tsv",
-        headers=rules.extract_contig_headers.output.headers,
+        contig_len=rules.extract_contig_headers.output.contig_len,
     output:
         csv="results/{project}/output/classification/assembly/{sample}/{sample}_classified_contigs.csv",
     log:
