@@ -52,6 +52,34 @@ classification_df.drop(["contig_len"], axis=1, inplace=True)
 # Read in resistance information
 df_args = pd.read_csv(args_file)
 
+# If no ARGs were detected, write empty output files with correct headers
+if df_args.empty:
+    # ----- drug class output -----
+    class_cols = [
+        "sample",
+        "contig",
+        "contig_len",
+        "level",
+        "classification",
+        "#ARGs",
+    ] + all_classes
+
+    pd.DataFrame(columns=class_cols).to_csv(abd_class, index=False)
+
+    # ----- ARG output -----
+    aro_cols = [
+        "sample",
+        "contig",
+        "contig_len",
+        "level",
+        "classification",
+        "#ARGs",
+    ] + all_aros
+
+    pd.DataFrame(columns=aro_cols).to_csv(abd_ARGs, index=False)
+
+    sys.exit(0)
+
 # Make a copy for drug classes to avoid modifying original df
 df_args_for_classes = df_args.copy()
 

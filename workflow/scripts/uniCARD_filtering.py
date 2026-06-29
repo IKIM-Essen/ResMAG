@@ -107,6 +107,11 @@ def write_filtered_ARGs(card_classes, unicard_in, outfile, filter_window):
 
         df_bests = pd.concat([df_bests, filtered_card_df])
 
+        # if there are no ARG hits at all the top10 df is emptied,
+        # the resulting file holds only the header
+        if df_bests.empty:
+            df_top10.drop(index=df_top10.index.to_list(), inplace=True)
+
         # Adding contig column
         df_bests.insert(
             1, "contig", df_top10["query"].map(lambda x: x.rsplit("_", 1)[0])

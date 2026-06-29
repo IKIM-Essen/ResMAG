@@ -23,7 +23,7 @@ rule CARD_load_DB_for_reads:
     input:
         get_card_db_file(),
     output:
-        temp(touch("results/CARD_load_DB_for_reads.done")),
+        touch("results/CARD_load_DB_for_reads.done"),
     log:
         "logs/CARD_load_DB_for_reads.log",
     conda:
@@ -38,7 +38,7 @@ rule CARD_annotation:
         json=get_card_db_file(),
         load=rules.CARD_load_DB_for_reads.output,
     output:
-        ann=temp(get_card_annotation_file()),
+        ann=get_card_annotation_file(),
     log:
         "logs/CARD_annotation.log",
     conda:
